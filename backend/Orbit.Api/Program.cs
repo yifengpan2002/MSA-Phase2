@@ -1,9 +1,16 @@
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
+using Microsoft.EntityFrameworkCore;
+using Orbit.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    var dbPath = Path.Combine(builder.Environment.ContentRootPath, "orbit.db");
+    options.UseSqlite($"Data Source={dbPath}");
+});
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -33,6 +40,22 @@ app.UseCors("Frontend");
 
 app.UseAuthorization();
 
+app.MapGet("/api/dbcheck", async (AppDbContext db) => Results.Ok(new
+{
+    canConnect = await db.Database.CanConnectAsync(),
+    users = await db.Users.CountAsync(),
+    posts = await db.Posts.CountAsync(),
+    supports = await db.Supports.CountAsync(),
+}));
+
 app.MapControllers();
+
+app.MapGet("/", () => Results.Ok(new
+{
+    name = "Orbit API",
+    version = "1.0",
+    docs = "/scalar",
+    health = "/api/health"
+}));
 
 app.Run();
