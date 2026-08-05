@@ -1,5 +1,6 @@
-import { AppBar, Box, Button, Toolbar } from "@mui/material";
-import { Link as RouterLink, useLocation } from "react-router-dom";
+import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/useAuthStore";
 
 const links = [
   { label: "Main", to: "/" },
@@ -8,7 +9,9 @@ const links = [
 
 export function NavBar() {
   const { pathname } = useLocation();
-  console.log("hello");
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+
   return (
     <AppBar
       position="sticky"
@@ -21,32 +24,47 @@ export function NavBar() {
       }}
     >
       <Toolbar sx={{ gap: 1 }}>
-        {links.map((link) => {
-          const isActive = pathname === link.to;
-          return (
-            <Button
-              key={link.to}
-              component={RouterLink}
-              to={link.to}
-              disableRipple
-              sx={{
-                borderRadius: 0,
-                borderBottom: 2,
-                color: isActive ? "text.primary" : "text.secondary",
-                borderColor: isActive ? "primary.main" : "transparent",
-                "&:hover": { bgcolor: "transparent", color: "text.primary" },
-              }}
-            >
-              {link.label}
-            </Button>
-          );
-        })}
+        {links.map((link) => (
+          <Button
+            key={link.to}
+            component={RouterLink}
+            to={link.to}
+            disableRipple
+            sx={{
+              borderRadius: 0,
+              borderBottom: 2,
+              color: pathname === link.to ? "text.primary" : "text.secondary",
+              borderColor:
+                pathname === link.to ? "primary.main" : "transparent",
+              "&:hover": { bgcolor: "transparent", color: "text.primary" },
+            }}
+          >
+            {link.label}
+          </Button>
+        ))}
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <Button component={RouterLink} to="/login" variant="contained">
-          Login
-        </Button>
+        {user ? (
+          <>
+            <Typography sx={{ mr: 2, fontSize: 14, color: "text.secondary" }}>
+              {user.username}
+            </Typography>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                logout();
+                navigate("/");
+              }}
+            >
+              Logout
+            </Button>
+          </>
+        ) : (
+          <Button component={RouterLink} to="/login" variant="contained">
+            Login
+          </Button>
+        )}
       </Toolbar>
     </AppBar>
   );

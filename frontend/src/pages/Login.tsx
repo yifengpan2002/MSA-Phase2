@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import {
+  Alert,
   Box,
   Button,
   Link,
@@ -8,9 +10,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useAuthStore } from "../store/useAuthStore";
 
 export function Login() {
   const [showRegister, setShowRegister] = useState(false);
+  const token = useAuthStore((state) => state.token);
+
+  if (token) return <Navigate to="/forum" replace />;
 
   return (
     <Box
@@ -34,63 +40,119 @@ export function Login() {
           borderColor: "divider",
         }}
       >
-        {showRegister ? (
-          <RegisterForm onShowLogin={() => setShowRegister(false)} />
-        ) : (
-          <LoginForm onShowRegister={() => setShowRegister(true)} />
-        )}
+        <AuthForm
+          mode={showRegister ? "register" : "login"}
+          onSwitch={() => setShowRegister((current) => !current)}
+        />
       </Paper>
     </Box>
   );
 }
 
-interface LoginFormProps {
-  onShowRegister: () => void;
-}
+function AuthForm({
+  mode,
+  onSwitch,
+}: {
+  mode: "login" | "register";
+  onSwitch: () => void;
+}) {
+  const navigate = useNavigate();
+  const { login, register, isSubmitting, error, clearError } = useAuthStore();
 
-function LoginForm({ onShowRegister }: LoginFormProps) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [localError, setLocalError] = useState("");
+
+  const isRegister = mode === "register";
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setLocalError("");
+
+    if (username.trim().length < 3) {
+      setLocalError("Username must be at least 3 characters.");
+      return;
+    }
+    if (password.length < 8) {
+      setLocalError("Password must be at least 8 characters.");
+      return;
+    }
+    if (isRegister && password !== confirm) {
+      setLocalError("Passwords do not match.");
+      return;
+    }
+
+    const ok = isRegister
+      ? await register(username.trim(), password)
+      : await login(username.trim(), password);
+
+    if (ok) navigate("/forum", { replace: true });
+  }
+
+  function handleSwitch() {
+    clearError();
+    setLocalError("");
+    onSwitch();
+  }
+
   return (
-    <Stack component="form" spacing={2.25}>
+    <Stack component="form" onSubmit={handleSubmit} spacing={2.25}>
       <Typography
         variant="h2"
         component="h1"
         align="center"
         sx={{ fontSize: "2rem" }}
       >
-        Login
+        {isRegister ? "Register" : "Login"}
       </Typography>
 
       <TextField
         fullWidth
         label="Username"
-        name="username"
+        value={username}
+        onChange={(event) => setUsername(event.target.value)}
         autoComplete="username"
       />
 
       <TextField
         fullWidth
         label="Password"
-        name="password"
         type="password"
-        autoComplete="current-password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        autoComplete={isRegister ? "new-password" : "current-password"}
       />
 
+      {isRegister && (
+        <TextField
+          fullWidth
+          label="Confirm password"
+          type="password"
+          value={confirm}
+          onChange={(event) => setConfirm(event.target.value)}
+          autoComplete="new-password"
+        />
+      )}
+
+      {(localError || error) && (
+        <Alert severity="error">{localError || error}</Alert>
+      )}
+
       <Button
-        type="button"
+        type="submit"
         variant="contained"
-        sx={{
-          alignSelf: "center",
-          minWidth: 120,
-          mt: 1,
-        }}
+        color={isRegister ? "secondary" : "primary"}
+        disabled={isSubmitting}
+        sx={{ alignSelf: "center", minWidth: 140, mt: 1 }}
       >
-        Login
+        {isSubmitting ? "Working…" : isRegister ? "Register" : "Login"}
       </Button>
 
       <Link
         component="button"
         type="button"
-        onClick={onShowRegister}
+        onClick={handleSwitch}
         underline="always"
         color="text.primary"
         sx={{
@@ -100,87 +162,9 @@ function LoginForm({ onShowRegister }: LoginFormProps) {
           cursor: "pointer",
         }}
       >
-        Register if you do not have an account
-      </Link>
-    </Stack>
-  );
-}
-
-interface RegisterFormProps {
-  onShowLogin: () => void;
-}
-
-function RegisterForm({ onShowLogin }: RegisterFormProps) {
-  return (
-    <Stack component="form" spacing={2.25}>
-      <Typography
-        variant="h2"
-        component="h1"
-        align="center"
-        sx={{ fontSize: "2rem" }}
-      >
-        Register
-      </Typography>
-
-      <TextField
-        fullWidth
-        label="Username"
-        name="registerUsername"
-        autoComplete="username"
-      />
-
-      <TextField
-        fullWidth
-        label="Email"
-        name="registerEmail"
-        type="email"
-        autoComplete="email"
-      />
-
-      <TextField
-        fullWidth
-        label="Password"
-        name="registerPassword"
-        type="password"
-        autoComplete="new-password"
-      />
-
-      <TextField
-        fullWidth
-        label="Confirm password"
-        name="confirmPassword"
-        type="password"
-        autoComplete="new-password"
-      />
-
-      <Button
-        type="button"
-        variant="contained"
-        color="secondary"
-        sx={{
-          alignSelf: "center",
-          minWidth: 140,
-          mt: 1,
-          color: "text.primary",
-        }}
-      >
-        Register
-      </Button>
-
-      <Link
-        component="button"
-        type="button"
-        onClick={onShowLogin}
-        underline="always"
-        color="text.primary"
-        sx={{
-          alignSelf: "center",
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Already have an account? Login
+        {isRegister
+          ? "Already have an account? Login"
+          : "Register if you do not have an account"}
       </Link>
     </Stack>
   );
