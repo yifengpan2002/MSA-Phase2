@@ -148,6 +148,7 @@ function ForumHeading() {
         variant="contained"
         size="large"
         startIcon={<EditOutlinedIcon />}
+        href="/write"
         sx={{
           minWidth: 180,
           py: 1.35,
