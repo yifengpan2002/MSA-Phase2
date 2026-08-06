@@ -1,4 +1,4 @@
-import type { AuthResponse } from "../types";
+import type { AuthResponse, Profile } from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000/api";
 
@@ -47,4 +47,12 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  getMyProfile: () => request<Profile>("/users/me"),
+
+  updateAvatar: (avatarUrl: string) => {
+    request<Profile>("/users/me/avatar", {
+      method: "PUT",
+      body: JSON.stringify({ avatarUrl }),
+    });
+  },
 };

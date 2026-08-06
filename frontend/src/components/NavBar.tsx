@@ -47,9 +47,13 @@ export function NavBar() {
 
         {user ? (
           <>
-            <Typography sx={{ mr: 2, fontSize: 14, color: "text.secondary" }}>
+            <Button
+              component={RouterLink}
+              to="/profile"
+              sx={{ mr: 1, color: "text.secondary" }}
+            >
               {user.username}
-            </Typography>
+            </Button>
             <Button
               variant="outlined"
               onClick={() => {

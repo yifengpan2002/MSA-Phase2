@@ -4,6 +4,8 @@ import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
 import { Forum } from "./pages/Forum";
 import { WritePost } from "./pages/WritePost";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { Profile } from "./pages/Profile";
 
 export default function App() {
   return (
@@ -14,6 +16,9 @@ export default function App() {
         <Route path="/forum" element={<Forum />} />
         <Route path="/login" element={<Login />} />
         <Route path="/write" element={<WritePost />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/profile" element={<Profile />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
