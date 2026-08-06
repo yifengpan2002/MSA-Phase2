@@ -33,6 +33,7 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -61,7 +62,9 @@ else
 }
 app.UseCors("Frontend");
 
+app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapGet("/api/dbcheck", async (AppDbContext db) => Results.Ok(new
 {

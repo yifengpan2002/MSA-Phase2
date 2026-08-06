@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             entity.HasIndex(u => u.Username).IsUnique();
             entity.Property(u => u.Username).HasMaxLength(20).IsRequired();
+            entity.Property(u => u.AvatarUrl).HasMaxLength(250_000);
         });
 
         builder.Entity<Post>(entity =>
