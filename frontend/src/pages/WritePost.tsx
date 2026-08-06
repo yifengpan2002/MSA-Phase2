@@ -19,6 +19,10 @@ import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import TipsAndUpdatesOutlinedIcon from "@mui/icons-material/TipsAndUpdatesOutlined";
+import { FormEvent, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Alert } from "@mui/material";
+import { api } from "../api/api";
 
 const suggestedTags = [
   "Fantasy",
@@ -30,6 +34,30 @@ const suggestedTags = [
 ];
 
 export function WritePost() {
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    const title = String(formData.get("title") ?? "").trim();
+    const body = String(formData.get("content") ?? "").trim();
+
+    try {
+      await api.createPost({ title, body });
+      navigate("/forum");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to publish story.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
   return (
     <Box
       component="main"
@@ -97,7 +125,7 @@ export function WritePost() {
                 backgroundColor: "background.paper",
               }}
             >
-              <Stack component="form" spacing={3}>
+              <Stack component="form" spacing={3} onSubmit={handleSubmit}>
                 <Box>
                   <Typography
                     sx={{
@@ -257,12 +285,13 @@ export function WritePost() {
                   </Button>
 
                   <Button
-                    type="button"
+                    type="submit"
                     variant="contained"
                     startIcon={<SendOutlinedIcon />}
+                    disabled={isSubmitting}
                     sx={{ minWidth: 150, py: 1.25 }}
                   >
-                    Publish story
+                    {isSubmitting ? "Publishing..." : "Publish story"}
                   </Button>
                 </Stack>
               </Stack>
@@ -287,6 +316,7 @@ export function WritePost() {
                   </Stack>
 
                   <Divider />
+                  {error && <Alert severity="error">{error}</Alert>}
 
                   <GuideItem
                     number="01"

@@ -55,4 +55,9 @@ export const api = {
       body: JSON.stringify({ avatarUrl }),
     });
   },
+  createPost: (body: { title: string; body: string }) =>
+    request("/posts", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 };

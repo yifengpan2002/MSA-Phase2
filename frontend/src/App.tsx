@@ -15,9 +15,9 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/forum" element={<Forum />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/write" element={<WritePost />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/write" element={<WritePost />} />
         </Route>
       </Routes>
     </BrowserRouter>
