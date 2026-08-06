@@ -37,3 +37,36 @@ export interface Profile {
   totalEnergy: number;
   posts: ProfilePostSummary[];
 }
+
+export interface Comment {
+  id: string;
+  body: string;
+  authorId: string;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  createdUtc: string;
+}
+
+export interface Post {
+  id: string;
+  title: string;
+  body: string;
+  authorId: string;
+  authorName: string;
+  supportCount: number;
+  createdUtc: string;
+}
+
+export interface PostDetail {
+  id: string;
+  title: string;
+  body: string;
+  authorId: string;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  energyCount: number;
+  createdUtc: string;
+  comments: Comment[];
+}
+
+export type SortOrder = "newest" | "supported" | "oldest";

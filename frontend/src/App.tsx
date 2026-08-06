@@ -6,6 +6,7 @@ import { Forum } from "./pages/Forum";
 import { WritePost } from "./pages/WritePost";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Profile } from "./pages/Profile";
+import { PostDetail } from "./pages/PostDetail";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/write" element={<WritePost />} />
         </Route>
+        <Route path="/forum/:id" element={<PostDetail />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,63 +1,67 @@
+import { useState, type FormEvent } from "react";
+import { Link as RouterLink, Navigate, useNavigate } from "react-router-dom";
 import {
+  Alert,
   Box,
   Button,
-  Chip,
   Container,
   Divider,
-  FormControl,
-  InputLabel,
   Link,
-  MenuItem,
   Paper,
-  Select,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
-import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import TipsAndUpdatesOutlinedIcon from "@mui/icons-material/TipsAndUpdatesOutlined";
-import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Alert } from "@mui/material";
 import { api } from "../api/api";
+import { useAuthStore } from "../store/useAuthStore";
 
-const suggestedTags = [
-  "Fantasy",
-  "Adventure",
-  "Mystery",
-  "Sci-fi",
-  "Drama",
-  "Romance",
-];
+const TITLE_LIMIT = 120;
+const BODY_LIMIT = 20000;
+
+function countWords(text: string): number {
+  const trimmed = text.trim();
+  return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
+}
 
 export function WritePost() {
   const navigate = useNavigate();
+  const token = useAuthStore((state) => state.token);
+
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  // Publishing requires a token, so don't let people write and then lose it.
+  if (!token) return <Navigate to="/login" replace />;
+
+  const canPublish = title.trim().length > 0 && body.trim().length > 0;
+
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (!canPublish) return;
+
     setError(null);
     setIsSubmitting(true);
 
-    const formData = new FormData(event.currentTarget);
-    const title = String(formData.get("title") ?? "").trim();
-    const body = String(formData.get("content") ?? "").trim();
-
     try {
-      await api.createPost({ title, body });
-      navigate("/forum");
-    } catch (error) {
+      const post = await api.createPost({
+        title: title.trim(),
+        body: body.trim(),
+      });
+      navigate(`/forum/${post.id}`);
+    } catch (caught) {
       setError(
-        error instanceof Error ? error.message : "Failed to publish story.",
+        caught instanceof Error ? caught.message : "Failed to publish story.",
       );
-    } finally {
       setIsSubmitting(false);
     }
   }
+
   return (
     <Box
       component="main"
@@ -71,7 +75,8 @@ export function WritePost() {
         <Stack spacing={4}>
           <Stack spacing={2}>
             <Link
-              href="/forum"
+              component={RouterLink}
+              to="/forum"
               underline="hover"
               color="text.secondary"
               sx={{
@@ -108,10 +113,7 @@ export function WritePost() {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                lg: "minmax(0, 1fr) 310px",
-              },
+              gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 310px" },
               gap: { xs: 3, lg: 3.5 },
               alignItems: "start",
             }}
@@ -125,176 +127,105 @@ export function WritePost() {
                 backgroundColor: "background.paper",
               }}
             >
-              <Stack component="form" spacing={3} onSubmit={handleSubmit}>
-                <Box>
-                  <Typography
-                    sx={{
-                      fontFamily: '"JetBrains Mono", monospace',
-                      color: "primary.main",
-                      fontSize: 12,
-                      letterSpacing: "0.16em",
-                      textTransform: "uppercase",
-                      mb: 1,
-                    }}
-                  >
-                    Story details
-                  </Typography>
-
-                  <Typography variant="h2" sx={{ fontSize: "2rem" }}>
-                    Create your next post
-                  </Typography>
-                </Box>
-
-                <Divider />
-
-                <TextField
-                  fullWidth
-                  required
-                  label="Story title"
-                  name="title"
-                  placeholder="Give your story a memorable title"
-                />
-
-                <TextField
-                  fullWidth
-                  label="Short description"
-                  name="description"
-                  placeholder="Write a short introduction for the forum preview"
-                  multiline
-                  minRows={3}
-                  helperText="This summary will appear on the forum page."
-                />
-
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 2,
-                  }}
-                >
-                  <FormControl fullWidth>
-                    <InputLabel id="category-label">Category</InputLabel>
-                    <Select
-                      labelId="category-label"
-                      label="Category"
-                      defaultValue=""
-                    >
-                      <MenuItem value="">Select a category</MenuItem>
-                      <MenuItem value="fantasy">Fantasy</MenuItem>
-                      <MenuItem value="science-fiction">
-                        Science fiction
-                      </MenuItem>
-                      <MenuItem value="mystery">Mystery</MenuItem>
-                      <MenuItem value="drama">Drama</MenuItem>
-                      <MenuItem value="romance">Romance</MenuItem>
-                      <MenuItem value="reflection">Reflection</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <TextField
-                    fullWidth
-                    label="Custom tags"
-                    name="tags"
-                    placeholder="space, mystery, adventure"
-                    helperText="Separate tags with commas."
-                  />
-                </Box>
-
-                <Box>
-                  <Typography
-                    color="text.secondary"
-                    sx={{ fontSize: 13, mb: 1.25 }}
-                  >
-                    Suggested tags
-                  </Typography>
-
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {suggestedTags.map((tag) => (
-                      <Chip
-                        key={tag}
-                        label={tag}
-                        clickable
-                        variant="outlined"
-                        sx={{
-                          "&:hover": {
-                            borderColor: "primary.main",
-                            backgroundColor: "rgba(31, 138, 112, 0.06)",
-                          },
-                        }}
-                      />
-                    ))}
-                  </Box>
-                </Box>
-
-                <Divider />
-
-                <Box>
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    justifyContent="space-between"
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    spacing={1}
-                    sx={{ mb: 1.25 }}
-                  >
-                    <Typography sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
-                      Your story
-                    </Typography>
-
+              <Box component="form" onSubmit={handleSubmit}>
+                <Stack spacing={3}>
+                  <Box>
                     <Typography
-                      color="text.secondary"
                       sx={{
                         fontFamily: '"JetBrains Mono", monospace',
+                        color: "primary.main",
                         fontSize: 12,
+                        letterSpacing: "0.16em",
+                        textTransform: "uppercase",
+                        mb: 1,
                       }}
                     >
-                      0 words
+                      Story details
                     </Typography>
-                  </Stack>
+
+                    <Typography variant="h2" sx={{ fontSize: "2rem" }}>
+                      Create your next post
+                    </Typography>
+                  </Box>
+
+                  <Divider />
+
+                  {error && <Alert severity="error">{error}</Alert>}
 
                   <TextField
                     fullWidth
                     required
-                    name="content"
-                    placeholder="Begin your story here..."
-                    multiline
-                    minRows={18}
-                    sx={{
-                      "& .MuiInputBase-root": {
-                        alignItems: "flex-start",
-                        fontFamily: '"Newsreader", Georgia, serif',
-                        fontSize: "1.15rem",
-                        lineHeight: 1.8,
-                      },
-                    }}
+                    label="Story title"
+                    placeholder="Give your story a memorable title"
+                    value={title}
+                    onChange={(event) =>
+                      setTitle(event.target.value.slice(0, TITLE_LIMIT))
+                    }
+                    helperText={`${title.length}/${TITLE_LIMIT}`}
                   />
-                </Box>
 
-                <Stack
-                  direction={{ xs: "column-reverse", sm: "row" }}
-                  justifyContent="flex-end"
-                  spacing={1.5}
-                  sx={{ pt: 1 }}
-                >
-                  <Button
-                    type="button"
-                    variant="outlined"
-                    startIcon={<SaveOutlinedIcon />}
-                    sx={{ minWidth: 150, py: 1.25 }}
-                  >
-                    Save draft
-                  </Button>
+                  <Box>
+                    <Stack
+                      direction={{ xs: "column", sm: "row" }}
+                      justifyContent="space-between"
+                      alignItems={{ xs: "flex-start", sm: "center" }}
+                      spacing={1}
+                      sx={{ mb: 1.25 }}
+                    >
+                      <Typography sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
+                        Your story
+                      </Typography>
 
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    startIcon={<SendOutlinedIcon />}
-                    disabled={isSubmitting}
-                    sx={{ minWidth: 150, py: 1.25 }}
+                      <Typography
+                        color="text.secondary"
+                        sx={{
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: 12,
+                        }}
+                      >
+                        {countWords(body)} words
+                      </Typography>
+                    </Stack>
+
+                    <TextField
+                      fullWidth
+                      required
+                      placeholder="Begin your story here..."
+                      multiline
+                      minRows={18}
+                      value={body}
+                      onChange={(event) =>
+                        setBody(event.target.value.slice(0, BODY_LIMIT))
+                      }
+                      inputProps={{ "aria-label": "Your story" }}
+                      sx={{
+                        "& .MuiInputBase-root": {
+                          alignItems: "flex-start",
+                          fontFamily: '"Newsreader", Georgia, serif',
+                          fontSize: "1.15rem",
+                          lineHeight: 1.8,
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  <Stack
+                    direction="row"
+                    justifyContent="flex-end"
+                    sx={{ pt: 1 }}
                   >
-                    {isSubmitting ? "Publishing..." : "Publish story"}
-                  </Button>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      startIcon={<SendOutlinedIcon />}
+                      disabled={isSubmitting || !canPublish}
+                      sx={{ minWidth: 160, py: 1.25 }}
+                    >
+                      {isSubmitting ? "Publishing..." : "Publish story"}
+                    </Button>
+                  </Stack>
                 </Stack>
-              </Stack>
+              </Box>
             </Paper>
 
             <Stack spacing={2}>
@@ -316,24 +247,21 @@ export function WritePost() {
                   </Stack>
 
                   <Divider />
-                  {error && <Alert severity="error">{error}</Alert>}
 
                   <GuideItem
                     number="01"
                     title="Create a clear title"
                     description="Use a title that gives readers a reason to open your story."
                   />
-
                   <GuideItem
                     number="02"
                     title="Make the first lines count"
                     description="The opening should introduce a question, image, or conflict."
                   />
-
                   <GuideItem
                     number="03"
-                    title="Choose useful tags"
-                    description="Tags help readers discover stories that match their interests."
+                    title="Write for one reader"
+                    description="Stories that speak to someone specific tend to resonate widely."
                   />
                 </Stack>
               </Paper>
@@ -368,13 +296,12 @@ export function WritePost() {
                     <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
                       Earn energy
                     </Typography>
-
                     <Typography
                       color="text.secondary"
                       sx={{ lineHeight: 1.55 }}
                     >
-                      The first support from each new reader can add energy to
-                      your account.
+                      The first support from each new reader adds energy to your
+                      account.
                     </Typography>
                   </Box>
                 </Stack>
@@ -410,7 +337,6 @@ function GuideItem({ number, title, description }: GuideItemProps) {
 
       <Box>
         <Typography sx={{ fontWeight: 600, mb: 0.4 }}>{title}</Typography>
-
         <Typography
           color="text.secondary"
           sx={{ fontSize: 14, lineHeight: 1.55 }}

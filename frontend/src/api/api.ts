@@ -1,4 +1,11 @@
-import type { AuthResponse, Profile } from "../types";
+import {
+  type Comment,
+  type PostDetail,
+  type AuthResponse,
+  type Profile,
+  type SortOrder,
+  type Post,
+} from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000/api";
 
@@ -49,15 +56,26 @@ export const api = {
     }),
   getMyProfile: () => request<Profile>("/users/me"),
 
-  updateAvatar: (avatarUrl: string) => {
+  updateAvatar: (avatarUrl: string) =>
     request<Profile>("/users/me/avatar", {
       method: "PUT",
       body: JSON.stringify({ avatarUrl }),
-    });
-  },
+    }),
   createPost: (body: { title: string; body: string }) =>
-    request("/posts", {
+    request<Post>("/posts", {
       method: "POST",
       body: JSON.stringify(body),
+    }),
+  listPosts: (sort: SortOrder = "newest") =>
+    request<Post[]>(`/posts?sort=${sort}`),
+  getPost: (id: string) => request<PostDetail>(`/posts/${id}`),
+  addComment: (postId: string, body: string) =>
+    request<Comment>(`/posts/${postId}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+    }),
+  deleteComment: (postId: string, commentId: string) =>
+    request<void>(`/posts/${postId}/comments/${commentId}`, {
+      method: "DELETE",
     }),
 };
