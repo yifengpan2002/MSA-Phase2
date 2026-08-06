@@ -38,19 +38,6 @@ public class PostsController(AppDbContext db) : ControllerBase
         return Ok(posts);
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<PostResponse>> GetById(Guid id)
-    {
-        var post = await db.Posts
-            .AsNoTracking()
-            .Where(p => p.Id == id)
-            .Select(p => new PostResponse(
-                p.Id, p.Title, p.Body, p.AuthorId,
-                p.Author.Username, p.Supports.Count, p.CreatedUtc))
-            .FirstOrDefaultAsync();
-
-        return post is null ? NotFound() : Ok(post);
-    }
 
     [HttpPost]
     [Authorize]
@@ -74,5 +61,35 @@ public class PostsController(AppDbContext db) : ControllerBase
             post.Id, post.Title, post.Body, author.Id, author.Username, 0, post.CreatedUtc);
 
         return CreatedAtAction(nameof(GetById), new { id = post.Id }, response);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<PostDetailResponse>> GetById(Guid id)
+    {
+        var post = await db.Posts
+            .AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(p => new PostDetailResponse(
+                p.Id,
+                p.Title,
+                p.Body,
+                p.AuthorId,
+                p.Author.Username,
+                p.Author.AvatarUrl,
+                p.Supports.Count,
+                p.CreatedUtc,
+                p.Comments
+                    .OrderBy(c => c.CreatedUtc)
+                    .Select(c => new CommentResponse(
+                        c.Id,
+                        c.Body,
+                        c.AuthorId,
+                        c.Author.Username,
+                        c.Author.AvatarUrl,
+                        c.CreatedUtc))
+                    .ToList()))
+            .FirstOrDefaultAsync();
+
+        return post is null ? NotFound() : Ok(post);
     }
 }

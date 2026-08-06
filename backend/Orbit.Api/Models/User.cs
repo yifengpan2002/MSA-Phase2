@@ -10,4 +10,5 @@ public class User
   public List<Support> Supports { get; set; } = new List<Support>();
   /// <summary>Base64 data URL, resized to 256x256 on the client.</summary>
   public string? AvatarUrl { get; set; }
+  public List<Comment> Comments { get; set; } = [];
 }
