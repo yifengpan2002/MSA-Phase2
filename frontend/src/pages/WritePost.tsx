@@ -167,10 +167,12 @@ export function WritePost() {
                   <Box>
                     <Stack
                       direction={{ xs: "column", sm: "row" }}
-                      justifyContent="space-between"
-                      alignItems={{ xs: "flex-start", sm: "center" }}
                       spacing={1}
-                      sx={{ mb: 1.25 }}
+                      sx={{
+                        mb: 1.25,
+                        justifyContent: "space-between",
+                        alignItems: { xs: "flex-start", sm: "center" },
+                      }}
                     >
                       <Typography sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
                         Your story
@@ -197,7 +199,9 @@ export function WritePost() {
                       onChange={(event) =>
                         setBody(event.target.value.slice(0, BODY_LIMIT))
                       }
-                      inputProps={{ "aria-label": "Your story" }}
+                      slotProps={{
+                        htmlInput: { "aria-label": "Your story" },
+                      }}
                       sx={{
                         "& .MuiInputBase-root": {
                           alignItems: "flex-start",
@@ -211,8 +215,7 @@ export function WritePost() {
 
                   <Stack
                     direction="row"
-                    justifyContent="flex-end"
-                    sx={{ pt: 1 }}
+                    sx={{ pt: 1, justifyContent: "flex-end" }}
                   >
                     <Button
                       type="submit"
@@ -228,7 +231,13 @@ export function WritePost() {
               </Box>
             </Paper>
 
-            <Stack spacing={2}>
+            <Stack
+              spacing={2}
+              sx={{
+                position: { lg: "sticky" },
+                top: { lg: 94 },
+              }}
+            >
               <Paper
                 component="aside"
                 variant="outlined"
@@ -239,7 +248,7 @@ export function WritePost() {
                 }}
               >
                 <Stack spacing={2}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                     <TipsAndUpdatesOutlinedIcon fontSize="small" />
                     <Typography sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
                       Writing guide

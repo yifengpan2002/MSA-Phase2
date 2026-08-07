@@ -38,9 +38,11 @@ export function Store() {
         <Stack spacing={4}>
           <Stack
             direction={{ xs: "column", sm: "row" }}
-            justifyContent="space-between"
-            alignItems={{ xs: "flex-start", sm: "flex-end" }}
             spacing={2}
+            sx={{
+              justifyContent: "space-between",
+              alignItems: { xs: "flex-start", sm: "flex-end" },
+            }}
           >
             <Box>
               <Typography
@@ -55,7 +57,11 @@ export function Store() {
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={0.75} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={0.75}
+              sx={{ alignItems: "center" }}
+            >
               <BoltOutlinedIcon sx={{ color: "primary.main" }} />
               <Typography
                 sx={{
@@ -102,25 +108,54 @@ function StarCard({ star }: { star: StarType }) {
   const busy = purchasingId === star.id;
 
   return (
-    <Card variant="outlined" sx={{ borderColor: "divider" }}>
+    <Card
+      variant="outlined"
+      sx={{
+        height: "100%",
+        overflow: "hidden",
+        transition: "transform 180ms ease, box-shadow 180ms ease",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.12)",
+        },
+      }}
+    >
       <Box
         sx={{
-          py: 3,
+          py: 4,
           display: "grid",
           placeItems: "center",
-          backgroundColor: `${star.colorHex}0F`,
+          background: `radial-gradient(circle at 50% 20%, ${star.colorHex}28, transparent 36%), linear-gradient(135deg, ${star.colorHex}12, transparent)`,
         }}
       >
         <Box
-          component="img"
-          src={star.imageUrl}
-          alt=""
-          sx={{ width: 96, height: 96 }}
+          aria-hidden="true"
+          sx={{
+            width: 104,
+            height: 104,
+            borderRadius: "50%",
+            background: `radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.78), ${star.colorHex} 34%, rgba(6, 8, 12, 0.88) 100%)`,
+            boxShadow: `0 0 42px ${star.colorHex}55, inset -18px -22px 30px rgba(0, 0, 0, 0.38)`,
+            position: "relative",
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              inset: "16% 9%",
+              borderRadius: "50%",
+              background:
+                "linear-gradient(135deg, rgba(255, 255, 255, 0.34), transparent 46%)",
+              transform: "rotate(-18deg)",
+            },
+          }}
         />
       </Box>
 
       <CardContent sx={{ p: 2.5 }}>
-        <Stack direction="row" alignItems="flex-start" spacing={1}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: "flex-start" }}
+        >
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography
               variant="h2"
@@ -138,7 +173,7 @@ function StarCard({ star }: { star: StarType }) {
                   color: "primary.main",
                 }}
               >
-                OWNED ×{star.ownedCount}
+                OWNED x{star.ownedCount}
               </Typography>
             )}
           </Box>
@@ -164,7 +199,11 @@ function StarCard({ star }: { star: StarType }) {
           {star.description}
         </Typography>
 
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 2 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{ mt: 2, alignItems: "center" }}
+        >
           <BoltOutlinedIcon
             fontSize="small"
             sx={{ color: affordable ? "primary.main" : "text.disabled" }}

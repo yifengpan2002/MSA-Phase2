@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -35,11 +35,22 @@ function preview(body: string): string {
   const clean = body.trim().replace(/\s+/g, " ");
   return clean.length <= PREVIEW_LENGTH
     ? clean
-    : `${clean.slice(0, PREVIEW_LENGTH).trimEnd()}…`;
+    : `${clean.slice(0, PREVIEW_LENGTH).trimEnd()}...`;
 }
 
 export function Forum() {
   const { posts, status, error, fetchPosts, clearError } = usePostStore();
+  const [query, setQuery] = useState("");
+
+  const visiblePosts = useMemo(() => {
+    const search = query.trim().toLowerCase();
+    if (!search) return posts;
+    return posts.filter((post) =>
+      [post.title, post.body, post.authorName].some((value) =>
+        value.toLowerCase().includes(search),
+      ),
+    );
+  }, [posts, query]);
 
   useEffect(() => {
     void fetchPosts();
@@ -67,7 +78,7 @@ export function Forum() {
             }}
           >
             <Stack spacing={3}>
-              <ForumControls />
+              <ForumControls query={query} onQueryChange={setQuery} />
 
               {/* Action errors (e.g. supporting your own story) surface here. */}
               {error && status === "ready" && (
@@ -84,7 +95,7 @@ export function Forum() {
 
               {status === "error" && <Alert severity="error">{error}</Alert>}
 
-              {status === "ready" && posts.length === 0 && (
+              {status === "ready" && visiblePosts.length === 0 && (
                 <Paper
                   variant="outlined"
                   sx={{
@@ -95,14 +106,16 @@ export function Forum() {
                   }}
                 >
                   <Typography color="text.secondary">
-                    No stories yet. Be the first to write one.
+                    {posts.length === 0
+                      ? "No stories yet. Be the first to write one."
+                      : "No stories match that search yet."}
                   </Typography>
                 </Paper>
               )}
 
-              {status === "ready" && (
+              {status === "ready" && visiblePosts.length > 0 && (
                 <Stack spacing={1.5}>
-                  {posts.map((post) => (
+                  {visiblePosts.map((post) => (
                     <PostCard key={post.id} post={post} />
                   ))}
                 </Stack>
@@ -123,9 +136,11 @@ function ForumHeading() {
   return (
     <Stack
       direction={{ xs: "column", sm: "row" }}
-      justifyContent="space-between"
-      alignItems={{ xs: "flex-start", sm: "center" }}
       spacing={2.5}
+      sx={{
+        justifyContent: "space-between",
+        alignItems: { xs: "flex-start", sm: "center" },
+      }}
     >
       <Box>
         <Typography
@@ -161,7 +176,13 @@ function ForumHeading() {
   );
 }
 
-function ForumControls() {
+function ForumControls({
+  query,
+  onQueryChange,
+}: {
+  query: string;
+  onQueryChange: (query: string) => void;
+}) {
   const { sort, setSort } = usePostStore();
 
   return (
@@ -175,6 +196,8 @@ function ForumControls() {
       <TextField
         fullWidth
         placeholder="Search stories, writers, tags..."
+        value={query}
+        onChange={(event) => onQueryChange(event.target.value)}
         slotProps={{
           input: {
             startAdornment: (
@@ -243,7 +266,7 @@ function PostCard({ post }: { post: Post }) {
               {post.title}
             </Typography>
 
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
               <Avatar
                 sx={{
                   width: 26,
@@ -258,7 +281,7 @@ function PostCard({ post }: { post: Post }) {
               </Avatar>
 
               <Typography color="text.secondary" sx={{ fontSize: 14 }}>
-                By {post.authorName} · {relativeTime(post.createdUtc)}
+                By {post.authorName} - {relativeTime(post.createdUtc)}
               </Typography>
             </Stack>
           </Box>
@@ -267,8 +290,11 @@ function PostCard({ post }: { post: Post }) {
         </Stack>
 
         <Stack
-          alignItems="flex-end"
-          sx={{ height: "100%", minHeight: { xs: 110, sm: 160 } }}
+          sx={{
+            height: "100%",
+            minHeight: { xs: 110, sm: 160 },
+            alignItems: { xs: "flex-start", sm: "flex-end" },
+          }}
         >
           <IconButton
             aria-label={`More options for ${post.title}`}
@@ -278,7 +304,7 @@ function PostCard({ post }: { post: Post }) {
             <MoreVertIcon />
           </IconButton>
 
-          <Stack alignItems="center" spacing={0.75} sx={{ mt: "auto" }}>
+          <Stack spacing={0.75} sx={{ mt: "auto", alignItems: "center" }}>
             {/* component="button" makes this keyboard-focusable and announced
                 by screen readers. stopPropagation keeps the click from
                 bubbling up to the card, which would navigate instead. */}
@@ -339,7 +365,13 @@ function ForumSidebar() {
   const energy = posts.reduce((total, post) => total + post.supportCount, 0);
 
   return (
-    <Stack spacing={2}>
+    <Stack
+      spacing={2}
+      sx={{
+        position: { lg: "sticky" },
+        top: { lg: 94 },
+      }}
+    >
       <Paper
         component="aside"
         variant="outlined"
@@ -387,7 +419,7 @@ function CommunityStat({
   label: string;
 }) {
   return (
-    <Stack direction="row" alignItems="center" spacing={1.5}>
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
       <Box sx={{ width: 28, display: "grid", placeItems: "center" }}>
         {icon}
       </Box>
@@ -418,7 +450,7 @@ function DailyPromptCard() {
       }}
     >
       <Stack spacing={2}>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <TipsAndUpdatesOutlinedIcon fontSize="small" />
           <Typography sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
             Daily prompt

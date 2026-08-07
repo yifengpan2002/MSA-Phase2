@@ -8,6 +8,7 @@ import {
   type SupportResult,
   type DailyStatus,
   type ClaimResult,
+  type GalaxyPlanet,
   type StarType,
 } from "../types";
 
@@ -89,6 +90,8 @@ export const api = {
     request<ClaimResult>("/energy/daily/claim", { method: "POST" }),
 
   getStars: () => request<StarType[]>("/store/stars"),
+
+  getMyGalaxy: () => request<GalaxyPlanet[]>("/users/me/galaxy"),
 
   purchaseStar: (id: string) =>
     request<{ energy: number; ownedCount: number }>(

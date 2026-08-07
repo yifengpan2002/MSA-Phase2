@@ -83,7 +83,14 @@ function ProfileHeader() {
     <Stack
       direction={{ xs: "column", sm: "row" }}
       spacing={3}
-      alignItems={{ xs: "flex-start", sm: "center" }}
+      sx={{
+        p: { xs: 3, md: 4 },
+        alignItems: { xs: "flex-start", sm: "center" },
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 6,
+        backgroundColor: "background.paper",
+      }}
     >
       <Box sx={{ position: "relative" }}>
         <Avatar
@@ -172,7 +179,7 @@ function Stat({
   accent?: boolean;
 }) {
   return (
-    <Stack direction="row" spacing={0.75} alignItems="baseline">
+    <Stack direction="row" spacing={0.75} sx={{ alignItems: "baseline" }}>
       <Typography
         sx={{
           fontFamily: '"JetBrains Mono", monospace',
@@ -244,7 +251,7 @@ function StoryGrid() {
             }}
           >
             <CardActionArea
-              onClick={() => navigate(`/forum`)}
+              onClick={() => navigate(`/forum/${post.id}`)}
               sx={{ height: "100%" }}
             >
               <CardContent sx={{ p: 2.5 }}>
@@ -261,7 +268,11 @@ function StoryGrid() {
                   {post.title}
                 </Typography>
 
-                <Stack direction="row" spacing={0.75} alignItems="center">
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  sx={{ alignItems: "center" }}
+                >
                   <BoltOutlinedIcon
                     fontSize="small"
                     sx={{ color: "primary.main" }}

@@ -22,22 +22,33 @@ export function Login() {
     <Box
       component="main"
       sx={{
-        minHeight: "100vh",
+        minHeight: "calc(100vh - 70px)",
         display: "grid",
         placeItems: "center",
-        px: 2,
-        backgroundColor: "background.default",
+        px: { xs: 2, sm: 3 },
+        py: { xs: 5, md: 8 },
+        background:
+          "radial-gradient(circle at 25% 20%, rgba(127, 225, 200, 0.12), transparent 28%), radial-gradient(circle at 75% 10%, rgba(242, 184, 75, 0.10), transparent 24%)",
       }}
     >
       <Paper
         variant="outlined"
         sx={{
           width: "100%",
-          maxWidth: 380,
-          px: { xs: 3, sm: 4 },
-          py: 4,
-          backgroundColor: "background.paper",
-          borderColor: "divider",
+          maxWidth: 430,
+          px: { xs: 3, sm: 4.5 },
+          py: { xs: 4, sm: 5 },
+          borderRadius: 6,
+          position: "relative",
+          overflow: "hidden",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            inset: 0,
+            borderTop: 3,
+            borderColor: "primary.main",
+            pointerEvents: "none",
+          },
         }}
       >
         <AuthForm
@@ -99,10 +110,23 @@ function AuthForm({
   return (
     <Stack component="form" onSubmit={handleSubmit} spacing={2.25}>
       <Typography
+        align="center"
+        sx={{
+          fontFamily: '"JetBrains Mono", monospace',
+          color: "primary.main",
+          fontSize: 12,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+        }}
+      >
+        Orbit access
+      </Typography>
+
+      <Typography
         variant="h2"
         component="h1"
         align="center"
-        sx={{ fontSize: "2rem" }}
+        sx={{ fontSize: "2.35rem" }}
       >
         {isRegister ? "Register" : "Login"}
       </Typography>
@@ -146,7 +170,7 @@ function AuthForm({
         disabled={isSubmitting}
         sx={{ alignSelf: "center", minWidth: 140, mt: 1 }}
       >
-        {isSubmitting ? "Working…" : isRegister ? "Register" : "Login"}
+        {isSubmitting ? "Working..." : isRegister ? "Register" : "Login"}
       </Button>
 
       <Link

@@ -213,7 +213,7 @@ export function Home() {
                 },
               }}
             >
-              Write · Earn energy · Build your world
+              Write - Earn energy - Build your world
             </Typography>
 
             <Typography
@@ -226,7 +226,7 @@ export function Home() {
                 fontSize: 13,
               }}
             >
-              © 2026 Orbit
+              (c) 2026 Orbit
             </Typography>
           </Box>
         </Container>

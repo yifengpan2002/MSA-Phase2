@@ -103,9 +103,7 @@ export function Daily() {
             <Stack
               direction="row"
               spacing={1}
-              justifyContent="center"
-              alignItems="center"
-              sx={{ mt: 1.5 }}
+              sx={{ mt: 1.5, justifyContent: "center", alignItems: "center" }}
             >
               <BoltOutlinedIcon sx={{ color: "primary.main", fontSize: 40 }} />
               <Typography
@@ -128,14 +126,14 @@ export function Daily() {
               sx={{ mt: 4, minWidth: 240, py: 1.5 }}
             >
               {isClaiming
-                ? "Claiming…"
+                ? "Claiming..."
                 : daily.canClaimToday
                   ? `Claim ${daily.nextReward} energy`
                   : "Come back tomorrow"}
             </Button>
 
             <Typography color="text.secondary" sx={{ mt: 2, fontSize: 14 }}>
-              Current streak: {daily.currentStreak} · Best:{" "}
+              Current streak: {daily.currentStreak} - Best:{" "}
               {daily.longestStreak}
             </Typography>
           </Paper>

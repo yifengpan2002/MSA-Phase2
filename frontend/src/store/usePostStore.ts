@@ -11,6 +11,7 @@ interface PostState {
   fetchPosts: () => Promise<void>;
   setSort: (sort: SortOrder) => Promise<void>;
   toggleSupport: (postId: string) => Promise<void>;
+  clearError: () => void;
 }
 
 export const usePostStore = create<PostState>((set, get) => ({
@@ -43,4 +44,5 @@ export const usePostStore = create<PostState>((set, get) => ({
     set({ sort });
     await get().fetchPosts();
   },
+  clearError: () => set({ error: null }),
 }));

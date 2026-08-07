@@ -88,7 +88,16 @@ export function PostDetail() {
             </Alert>
           )}
 
-          <Box component="article">
+          <Box
+            component="article"
+            sx={{
+              p: { xs: 2.5, sm: 3.5, md: 4.5 },
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 6,
+              backgroundColor: "background.paper",
+            }}
+          >
             <Typography
               variant="h1"
               component="h1"
@@ -99,9 +108,8 @@ export function PostDetail() {
 
             <Stack
               direction="row"
-              alignItems="center"
               spacing={1.5}
-              sx={{ mt: 2.5, flexWrap: "wrap" }}
+              sx={{ mt: 2.5, flexWrap: "wrap", alignItems: "center" }}
             >
               <Avatar
                 src={post.authorAvatarUrl ?? undefined}
@@ -117,13 +125,17 @@ export function PostDetail() {
               </Avatar>
 
               <Typography color="text.secondary" sx={{ fontSize: 14 }}>
-                By {post.authorName} ·{" "}
+                By {post.authorName} -{" "}
                 {new Date(post.createdUtc).toLocaleDateString()}
               </Typography>
 
               <Box sx={{ flexGrow: 1 }} />
 
-              <Stack direction="row" spacing={0.75} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={0.75}
+                sx={{ alignItems: "center" }}
+              >
                 <BoltOutlinedIcon
                   fontSize="small"
                   sx={{ color: "primary.main" }}
@@ -227,13 +239,13 @@ function CommentComposer() {
           fullWidth
           multiline
           minRows={3}
-          placeholder="Share what you thought of this story…"
+          placeholder="Share what you thought of this story..."
           value={body}
           onChange={(event) => setBody(event.target.value.slice(0, 1000))}
           slotProps={{ htmlInput: { "aria-label": "Your comment" } }}
         />
 
-        <Stack direction="row" alignItems="center" spacing={2}>
+        <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
           <Typography
             color="text.secondary"
             sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12 }}
@@ -249,7 +261,7 @@ function CommentComposer() {
             disabled={isSubmitting || !body.trim()}
             sx={{ minWidth: 140 }}
           >
-            {isSubmitting ? "Posting…" : "Comment"}
+            {isSubmitting ? "Posting..." : "Comment"}
           </Button>
         </Stack>
       </Stack>
@@ -279,7 +291,7 @@ function CommentRow({ comment }: { comment: Comment }) {
       </Avatar>
 
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
             {comment.authorName}
           </Typography>
