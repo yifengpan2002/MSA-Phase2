@@ -94,7 +94,7 @@ export function PostDetail() {
               p: { xs: 2.5, sm: 3.5, md: 4.5 },
               border: 1,
               borderColor: "divider",
-              borderRadius: 6,
+              borderRadius: "2px",
               backgroundColor: "background.paper",
             }}
           >
