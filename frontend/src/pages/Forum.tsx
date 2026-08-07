@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -39,22 +39,15 @@ function preview(body: string): string {
 }
 
 export function Forum() {
-  const { posts, status, error, fetchPosts, clearError } = usePostStore();
-  const [query, setQuery] = useState("");
-
-  const visiblePosts = useMemo(() => {
-    const search = query.trim().toLowerCase();
-    if (!search) return posts;
-    return posts.filter((post) =>
-      [post.title, post.body, post.authorName].some((value) =>
-        value.toLowerCase().includes(search),
-      ),
-    );
-  }, [posts, query]);
+  const { posts, sort, search, status, error, fetchPosts, clearError } =
+    usePostStore();
 
   useEffect(() => {
-    void fetchPosts();
-  }, [fetchPosts]);
+    const delay = search.trim() ? 300 : 0;
+    const timeout = window.setTimeout(() => void fetchPosts(), delay);
+
+    return () => window.clearTimeout(timeout);
+  }, [fetchPosts, search, sort]);
 
   return (
     <Box
@@ -78,7 +71,7 @@ export function Forum() {
             }}
           >
             <Stack spacing={3}>
-              <ForumControls query={query} onQueryChange={setQuery} />
+              <ForumControls />
 
               {/* Action errors (e.g. supporting your own story) surface here. */}
               {error && status === "ready" && (
@@ -95,7 +88,7 @@ export function Forum() {
 
               {status === "error" && <Alert severity="error">{error}</Alert>}
 
-              {status === "ready" && visiblePosts.length === 0 && (
+              {status === "ready" && posts.length === 0 && (
                 <Paper
                   variant="outlined"
                   sx={{
@@ -106,16 +99,16 @@ export function Forum() {
                   }}
                 >
                   <Typography color="text.secondary">
-                    {posts.length === 0
+                    {search.trim() === ""
                       ? "No stories yet. Be the first to write one."
                       : "No stories match that search yet."}
                   </Typography>
                 </Paper>
               )}
 
-              {status === "ready" && visiblePosts.length > 0 && (
+              {status === "ready" && posts.length > 0 && (
                 <Stack spacing={1.5}>
-                  {visiblePosts.map((post) => (
+                  {posts.map((post) => (
                     <PostCard key={post.id} post={post} />
                   ))}
                 </Stack>
@@ -176,14 +169,8 @@ function ForumHeading() {
   );
 }
 
-function ForumControls({
-  query,
-  onQueryChange,
-}: {
-  query: string;
-  onQueryChange: (query: string) => void;
-}) {
-  const { sort, setSort } = usePostStore();
+function ForumControls() {
+  const { sort, search, setSearch, setSort } = usePostStore();
 
   return (
     <Box
@@ -195,9 +182,9 @@ function ForumControls({
     >
       <TextField
         fullWidth
-        placeholder="Search stories, writers, tags..."
-        value={query}
-        onChange={(event) => onQueryChange(event.target.value)}
+        placeholder="Search stories or writers..."
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
         slotProps={{
           input: {
             startAdornment: (
@@ -212,12 +199,11 @@ function ForumControls({
       <Select
         fullWidth
         value={sort}
-        onChange={(event) => void setSort(event.target.value as SortOrder)}
+        onChange={(event) => setSort(event.target.value as SortOrder)}
         inputProps={{ "aria-label": "Sort stories" }}
       >
         <MenuItem value="newest">Newest</MenuItem>
-        <MenuItem value="supported">Most supported</MenuItem>
-        <MenuItem value="oldest">Oldest</MenuItem>
+        <MenuItem value="hottest">Hottest</MenuItem>
       </Select>
     </Box>
   );
