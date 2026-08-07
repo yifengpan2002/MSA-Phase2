@@ -10,13 +10,13 @@ using Orbit.Api.Services;
 
 public static class EnergyRules
 {
-    public const int BaseDailyReward = 10;
+    public const int BaseDailyReward = 25;
     public const int MaxDailyReward = 250;
-    public const int SupportReward = 5;
+    public const int SupportReward = 50;
 
     /// <summary>
     /// Doubles each consecutive day, capped so long streaks stay balanced.
-    /// Day 1: 10, day 2: 20, day 3: 40, day 4: 80, day 5: 160, day 6+: 250.
+    /// Day 1: 25, day 2: 50, day 3: 100, day 4: 200, day 5+: 250.
     /// </summary>
     public static int DailyReward(int streakDay)
     {
