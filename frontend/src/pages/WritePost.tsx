@@ -43,7 +43,11 @@ export function WritePost() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!canPublish) return;
+
+    if (!canPublish) {
+      setError("Title and story body are required.");
+      return;
+    }
 
     setError(null);
     setIsSubmitting(true);

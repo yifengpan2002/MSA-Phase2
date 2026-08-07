@@ -5,11 +5,13 @@ import type { Post, SortOrder } from "../types";
 interface PostState {
   posts: Post[];
   sort: SortOrder;
+  search: string;
   status: "idle" | "loading" | "ready" | "error";
   error: string | null;
 
   fetchPosts: () => Promise<void>;
-  setSort: (sort: SortOrder) => Promise<void>;
+  setSort: (sort: SortOrder) => void;
+  setSearch: (search: string) => void;
   toggleSupport: (postId: string) => Promise<void>;
   clearError: () => void;
 }
@@ -17,13 +19,17 @@ interface PostState {
 export const usePostStore = create<PostState>((set, get) => ({
   posts: [],
   sort: "newest",
+  search: "",
   status: "idle",
   error: null,
 
   fetchPosts: async () => {
     set({ status: "loading", error: null });
     try {
-      set({ posts: await api.listPosts(get().sort), status: "ready" });
+      set({
+        posts: await api.listPosts(get().sort, get().search),
+        status: "ready",
+      });
     } catch (error) {
       set({ error: (error as Error).message, status: "error" });
     }
@@ -40,9 +46,9 @@ export const usePostStore = create<PostState>((set, get) => ({
       set({ error: (error as Error).message });
     }
   },
-  setSort: async (sort) => {
+  setSort: (sort) => {
     set({ sort });
-    await get().fetchPosts();
   },
+  setSearch: (search) => set({ search }),
   clearError: () => set({ error: null }),
 }));
