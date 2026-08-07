@@ -15,6 +15,14 @@ export function getGalaxyLayout(index: number, total: number): GalaxyLayout {
     };
   }
 
+  if (total === 2) {
+    return {
+      position: index === 0 ? [-2.9, 0.2, 0] : [2.9, -0.2, 0],
+      rotationSpeed: 0.003 + index * 0.0007,
+      displayScale: 1.18,
+    };
+  }
+
   const count = Math.max(2, total);
   const y = 1 - (index / (count - 1)) * 2;
   const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));

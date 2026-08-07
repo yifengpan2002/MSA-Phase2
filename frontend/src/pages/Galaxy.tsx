@@ -764,3 +764,5 @@ useGLTF.preload("/models/alien.glb");
 useGLTF.preload("/models/planet.glb");
 useGLTF.preload("/models/purple.glb");
 useGLTF.preload("/models/stylized.glb");
+useGLTF.preload("/models/crystal.glb");
+useGLTF.preload("/models/transformers-_the_planet_cybertron.glb");
