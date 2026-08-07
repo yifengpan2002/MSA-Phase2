@@ -13,13 +13,26 @@ namespace Orbit.Api.Controllers;
 public class PostsController(AppDbContext db) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<PostResponse>>> GetAll([FromQuery] string sort = "newest")
+    public async Task<ActionResult<List<PostResponse>>> GetAll(
+        [FromQuery] string sort = "newest",
+        [FromQuery] string? search = null)
     {
         var query = db.Posts.AsNoTracking();
 
-        query = sort switch
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            "supported" => query.OrderByDescending(p => p.Supports.Count),
+            var term = $"%{search.Trim()}%";
+            query = query.Where(p =>
+                EF.Functions.Like(p.Title, term) ||
+                EF.Functions.Like(p.Body, term) ||
+                EF.Functions.Like(p.Author.Username, term));
+        }
+
+        query = sort.ToLowerInvariant() switch
+        {
+            "hottest" or "supported" => query
+                .OrderByDescending(p => p.Supports.Count)
+                .ThenByDescending(p => p.CreatedUtc),
             "oldest" => query.OrderBy(p => p.CreatedUtc),
             _ => query.OrderByDescending(p => p.CreatedUtc),
         };
@@ -46,10 +59,16 @@ public class PostsController(AppDbContext db) : ControllerBase
         var author = await db.Users.FirstOrDefaultAsync(u => u.Id == authorId);
         if (author is null) return Unauthorized();
 
+        var title = request.Title.Trim();
+        var body = request.Body.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(body))
+            return BadRequest(new { message = "Title and story body are required." });
+
         var post = new Post
         {
-            Title = request.Title.Trim(),
-            Body = request.Body.Trim(),
+            Title = title,
+            Body = body,
             AuthorId = author.Id,
         };
 
