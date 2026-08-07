@@ -147,6 +147,12 @@ public static class DemoContentSeeder
             .Where(userByName.ContainsKey)
             .ToArray();
 
+        var supportPairs = (await db.Supports
+                .Select(s => new { s.PostId, s.UserId })
+                .ToListAsync())
+            .Select(s => (s.PostId, s.UserId))
+            .ToHashSet();
+
         for (var index = 0; index < posts.Length; index++)
         {
             var seed = posts[index];
@@ -154,28 +160,28 @@ public static class DemoContentSeeder
 
             var supportTarget = 3 + index % 5;
             var supporterIndex = index * 3;
-            var added = 0;
+            var currentSupportCount = supportPairs.Count(pair => pair.PostId == post.Id);
+            var attempts = 0;
 
-            while (added < supportTarget && added < supportPool.Length - 1)
+            while (currentSupportCount < supportTarget && attempts < supportPool.Length)
             {
                 var supporterName = supportPool[supporterIndex % supportPool.Length];
                 supporterIndex++;
+                attempts++;
 
                 if (supporterName == seed.AuthorUsername) continue;
                 var supporter = userByName[supporterName];
 
-                var exists = await db.Supports.AnyAsync(s =>
-                    s.PostId == post.Id &&
-                    s.UserId == supporter.Id);
-                if (exists) continue;
+                var supportPair = (PostId: post.Id, UserId: supporter.Id);
+                if (!supportPairs.Add(supportPair)) continue;
 
                 db.Supports.Add(new Support
                 {
                     PostId = post.Id,
                     UserId = supporter.Id,
-                    CreatedUtc = post.CreatedUtc.AddHours(1 + added),
+                    CreatedUtc = post.CreatedUtc.AddHours(1 + currentSupportCount),
                 });
-                added++;
+                currentSupportCount++;
             }
         }
 
