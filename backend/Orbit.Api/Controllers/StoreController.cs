@@ -23,6 +23,7 @@ public class StoreController(AppDbContext db) : ControllerBase
             .OrderBy(s => s.Cost)
             .Select(s => new StarTypeResponse(
                 s.Id, s.Name, s.Description, s.Cost, s.ImageUrl, s.ColorHex,
+                s.ModelUrl,
                 db.OwnedStars.Count(o => o.StarTypeId == s.Id && o.UserId == userId)))
             .ToListAsync();
 

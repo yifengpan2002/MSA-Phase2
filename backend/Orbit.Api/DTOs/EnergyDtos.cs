@@ -24,6 +24,7 @@ public record StarTypeResponse(
     int Cost,
     string ImageUrl,
     string ColorHex,
+    string? ModelUrl,
     int OwnedCount
 );
 public record GalaxyPlanet(
