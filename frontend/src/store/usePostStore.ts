@@ -10,6 +10,7 @@ interface PostState {
 
   fetchPosts: () => Promise<void>;
   setSort: (sort: SortOrder) => Promise<void>;
+  toggleSupport: (postId: string) => Promise<void>;
 }
 
 export const usePostStore = create<PostState>((set, get) => ({
@@ -26,7 +27,18 @@ export const usePostStore = create<PostState>((set, get) => ({
       set({ error: (error as Error).message, status: "error" });
     }
   },
-
+  toggleSupport: async (postId: string) => {
+    try {
+      const result = await api.toggleSupport(postId);
+      set({
+        posts: get().posts.map((p) =>
+          p.id === postId ? { ...p, supportCount: result.energyCount } : p,
+        ),
+      });
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
   setSort: async (sort) => {
     set({ sort });
     await get().fetchPosts();

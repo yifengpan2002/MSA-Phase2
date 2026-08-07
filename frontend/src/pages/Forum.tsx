@@ -39,7 +39,7 @@ function preview(body: string): string {
 }
 
 export function Forum() {
-  const { posts, status, error, fetchPosts } = usePostStore();
+  const { posts, status, error, fetchPosts, clearError } = usePostStore();
 
   useEffect(() => {
     void fetchPosts();
@@ -68,6 +68,13 @@ export function Forum() {
           >
             <Stack spacing={3}>
               <ForumControls />
+
+              {/* Action errors (e.g. supporting your own story) surface here. */}
+              {error && status === "ready" && (
+                <Alert severity="error" onClose={clearError}>
+                  {error}
+                </Alert>
+              )}
 
               {(status === "loading" || status === "idle") && (
                 <Box sx={{ display: "grid", placeItems: "center", py: 8 }}>
@@ -195,6 +202,7 @@ function ForumControls() {
 
 function PostCard({ post }: { post: Post }) {
   const navigate = useNavigate();
+  const toggleSupport = usePostStore((state) => state.toggleSupport);
 
   return (
     <Paper
@@ -271,16 +279,31 @@ function PostCard({ post }: { post: Post }) {
           </IconButton>
 
           <Stack alignItems="center" spacing={0.75} sx={{ mt: "auto" }}>
+            {/* component="button" makes this keyboard-focusable and announced
+                by screen readers. stopPropagation keeps the click from
+                bubbling up to the card, which would navigate instead. */}
             <Box
+              component="button"
+              type="button"
+              aria-label={`Support ${post.title}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                void toggleSupport(post.id);
+              }}
               sx={{
                 width: 54,
                 height: 54,
+                p: 0,
                 display: "grid",
                 placeItems: "center",
                 border: 1.5,
                 borderColor: "primary.main",
                 borderRadius: "50%",
                 color: "primary.main",
+                background: "none",
+                cursor: "pointer",
+                transition: "background-color 150ms ease",
+                "&:hover": { backgroundColor: "rgba(31, 138, 112, 0.10)" },
               }}
             >
               <BoltOutlinedIcon />

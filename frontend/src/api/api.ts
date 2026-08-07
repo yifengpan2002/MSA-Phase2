@@ -5,6 +5,10 @@ import {
   type Profile,
   type SortOrder,
   type Post,
+  type SupportResult,
+  type DailyStatus,
+  type ClaimResult,
+  type StarType,
 } from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000/api";
@@ -78,4 +82,22 @@ export const api = {
     request<void>(`/posts/${postId}/comments/${commentId}`, {
       method: "DELETE",
     }),
+
+  getDailyStatus: () => request<DailyStatus>("/energy/daily"),
+
+  claimDaily: () =>
+    request<ClaimResult>("/energy/daily/claim", { method: "POST" }),
+
+  getStars: () => request<StarType[]>("/store/stars"),
+
+  purchaseStar: (id: string) =>
+    request<{ energy: number; ownedCount: number }>(
+      `/store/stars/${id}/purchase`,
+      {
+        method: "POST",
+      },
+    ),
+
+  toggleSupport: (postId: string) =>
+    request<SupportResult>(`/posts/${postId}/support`, { method: "POST" }),
 };

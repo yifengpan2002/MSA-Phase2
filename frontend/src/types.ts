@@ -70,3 +70,35 @@ export interface PostDetail {
 }
 
 export type SortOrder = "newest" | "supported" | "oldest";
+
+export interface DailyStatus {
+  canClaimToday: boolean;
+  currentStreak: number;
+  longestStreak: number;
+  nextReward: number;
+  energy: number;
+  lastClaimUtc: string | null;
+}
+
+export interface ClaimResult {
+  energyAwarded: number;
+  currentStreak: number;
+  longestStreak: number;
+  energy: number;
+  streakReset: boolean;
+}
+
+export interface StarType {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  imageUrl: string;
+  colorHex: string;
+  ownedCount: number;
+}
+
+export interface SupportResult {
+  energyCount: number;
+  supportedByMe: boolean;
+}
