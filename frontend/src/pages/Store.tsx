@@ -1,10 +1,4 @@
-import {
-  Component,
-  Suspense,
-  useEffect,
-  useMemo,
-  type ReactNode,
-} from "react";
+import { Component, Suspense, useEffect, useMemo, type ReactNode } from "react";
 import {
   Alert,
   Box,
@@ -26,8 +20,12 @@ import type { StarType } from "../types";
 
 const PREVIEW_MODEL_SIZE = 2.35;
 const DEFAULT_PREVIEW_ROTATION: [number, number, number] = [0.18, -0.55, 0.08];
-const MODEL_PREVIEW_ROTATIONS: Record<string, [number, number, number]> = {
-  "/models/planet.glb": [0.08, 0.88, -0.05],
+const MODEL_PREVIEW_ROTATIONS: Record<string, [number, number, number]> = {};
+const MODEL_PREVIEW_SIZES: Record<string, number> = {
+  "/models/purple.glb": 2.75,
+};
+const MODEL_PREVIEW_OFFSETS: Record<string, [number, number, number]> = {
+  "/models/uranium.glb": [0, -1.078, 0],
 };
 
 function isModelPath(modelUrl: string | null): modelUrl is string {
@@ -48,6 +46,14 @@ function isImagePath(imageUrl: string | null | undefined): imageUrl is string {
 
 function getPreviewRotation(modelUrl: string): [number, number, number] {
   return MODEL_PREVIEW_ROTATIONS[modelUrl] ?? DEFAULT_PREVIEW_ROTATION;
+}
+
+function getPreviewSize(modelUrl: string) {
+  return MODEL_PREVIEW_SIZES[modelUrl] ?? PREVIEW_MODEL_SIZE;
+}
+
+function getPreviewOffset(modelUrl: string): [number, number, number] {
+  return MODEL_PREVIEW_OFFSETS[modelUrl] ?? [0, 0, 0];
 }
 
 export function Store() {
@@ -92,11 +98,7 @@ export function Store() {
               </Typography>
             </Box>
 
-            <Stack
-              direction="row"
-              spacing={0.75}
-              sx={{ alignItems: "center" }}
-            >
+            <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
               <BoltOutlinedIcon sx={{ color: "primary.main" }} />
               <Typography
                 sx={{
@@ -167,11 +169,7 @@ function StarCard({ star }: { star: StarType }) {
       </Box>
 
       <CardContent sx={{ p: 2.5 }}>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{ alignItems: "flex-start" }}
-        >
+        <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography
               variant="h2"
@@ -253,10 +251,10 @@ function PlanetPreviewAvatar({ star }: { star: StarType }) {
       role="img"
       aria-label={`${star.name} planet preview`}
       sx={{
-        width: 128,
-        height: 128,
-        borderRadius: "50%",
-        overflow: "hidden",
+        width: { xs: 152, sm: 168 },
+        height: 140,
+        borderRadius: 3,
+        overflow: "visible",
         position: "relative",
         border: 1,
         borderColor: "divider",
@@ -297,7 +295,7 @@ function PlanetImageAvatar({ imageUrl }: { imageUrl: string }) {
       sx={{
         display: "block",
         height: "100%",
-        objectFit: "cover",
+        objectFit: "contain",
         width: "100%",
       }}
     />
@@ -307,6 +305,7 @@ function PlanetImageAvatar({ imageUrl }: { imageUrl: string }) {
 function PlanetPreviewModel({ modelUrl }: { modelUrl: string }) {
   const { scene } = useGLTF(modelUrl);
   const rotation = getPreviewRotation(modelUrl);
+  const offset = getPreviewOffset(modelUrl);
 
   const { clone, scale } = useMemo(() => {
     const clonedScene = scene.clone(true);
@@ -322,12 +321,12 @@ function PlanetPreviewModel({ modelUrl }: { modelUrl: string }) {
 
     return {
       clone: clonedScene,
-      scale: PREVIEW_MODEL_SIZE / maxAxis,
+      scale: getPreviewSize(modelUrl) / maxAxis,
     };
-  }, [scene]);
+  }, [modelUrl, scene]);
 
   return (
-    <group rotation={rotation}>
+    <group position={offset} rotation={rotation}>
       <primitive object={clone} scale={scale} />
     </group>
   );

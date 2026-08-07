@@ -44,6 +44,9 @@ const OVERVIEW_TARGET = new THREE.Vector3(0, 0, 0);
 const DETAIL_CAMERA_OFFSET = new THREE.Vector3(0.45, 0.24, 1)
   .normalize()
   .multiplyScalar(4.1);
+const MODEL_DISPLAY_SIZES: Record<string, number> = {
+  "/models/purple.glb": 1.85,
+};
 
 function isModelPath(modelUrl: string | null): modelUrl is string {
   return (
@@ -562,9 +565,9 @@ function ModelPlanet({ modelUrl }: { modelUrl: string }) {
 
     return {
       clone,
-      scale: MODEL_DISPLAY_SIZE / maxAxis,
+      scale: (MODEL_DISPLAY_SIZES[modelUrl] ?? MODEL_DISPLAY_SIZE) / maxAxis,
     };
-  }, [scene]);
+  }, [modelUrl, scene]);
 
   return (
     <group>
@@ -760,9 +763,18 @@ function PlanetPanel({
   );
 }
 
-useGLTF.preload("/models/alien.glb");
-useGLTF.preload("/models/planet.glb");
-useGLTF.preload("/models/purple.glb");
-useGLTF.preload("/models/stylized.glb");
-useGLTF.preload("/models/crystal.glb");
-useGLTF.preload("/models/transformers-_the_planet_cybertron.glb");
+[
+  "/models/alien.glb",
+  "/models/lava.glb",
+  "/models/garden.glb",
+  "/models/stylized.glb",
+  "/models/purple-gas.glb",
+  "/models/cottage-small.glb",
+  "/models/purple.glb",
+  "/models/uranium.glb",
+  "/models/dusk.glb",
+  "/models/solar-crown.glb",
+  "/models/devourer.glb",
+].forEach((modelUrl) => {
+  useGLTF.preload(modelUrl);
+});
