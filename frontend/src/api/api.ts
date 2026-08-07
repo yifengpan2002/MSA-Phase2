@@ -71,8 +71,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
-  listPosts: (sort: SortOrder = "newest") =>
-    request<Post[]>(`/posts?sort=${sort}`),
+  listPosts: (sort: SortOrder = "newest", search = "") => {
+    const params = new URLSearchParams({ sort });
+    const trimmedSearch = search.trim();
+    if (trimmedSearch) params.set("search", trimmedSearch);
+
+    return request<Post[]>(`/posts?${params.toString()}`);
+  },
   getPost: (id: string) => request<PostDetail>(`/posts/${id}`),
   addComment: (postId: string, body: string) =>
     request<Comment>(`/posts/${postId}/comments`, {
