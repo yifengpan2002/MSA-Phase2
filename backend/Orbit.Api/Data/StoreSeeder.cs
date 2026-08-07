@@ -11,8 +11,8 @@ public static class StoreSeeder
         {
             new StarType
             {
-                Name = "Ember",
-                Description = "A small red dwarf. Steady, patient, long-burning.",
+                Name = "Allen Planet",
+                Description = "A copy of Earth, made by aliens.",
                 Cost = 50,
                 ColorHex = "#E8734A",
                 ImageUrl = "/stars/ember.png",
@@ -21,8 +21,8 @@ public static class StoreSeeder
             },
             new StarType
             {
-                Name = "Beacon",
-                Description = "A yellow main-sequence star, bright enough to guide by.",
+                Name = "Lava",
+                Description = "A lava planet with a molten surface and a fiery aura.",
                 Cost = 120,
                 ColorHex = "#E8B93F",
                 ImageUrl = "/stars/beacon.png",
@@ -32,7 +32,7 @@ public static class StoreSeeder
             new StarType
             {
                 Name = "Magma",
-                Description = "A lava-hearted world with cooled crust and cracks that still remember fire.",
+                Description = "A planet filled with the aura of destruction.",
                 Cost = 180,
                 ColorHex = "#F97316",
                 ImageUrl = "/stars/magma.png",
@@ -41,8 +41,8 @@ public static class StoreSeeder
             },
             new StarType
             {
-                Name = "Garden",
-                Description = "A tiny wild planet where green light keeps growing over every ridge.",
+                Name = "Green Energy",
+                Description = "An asteroid that was destroyed before, but is now full of life again.",
                 Cost = 260,
                 ColorHex = "#65D67C",
                 ImageUrl = "/stars/garden.png",
@@ -51,8 +51,8 @@ public static class StoreSeeder
             },
             new StarType
             {
-                Name = "Verdant",
-                Description = "An unusual green-tinged giant. Rare and quietly strange.",
+                Name = "Stylized Planet",
+                Description = "Legend has it that a child of wind was born.",
                 Cost = 300,
                 ColorHex = "#35A98B",
                 ImageUrl = "/stars/verdant.png",
@@ -61,8 +61,8 @@ public static class StoreSeeder
             },
             new StarType
             {
-                Name = "Nebula",
-                Description = "A purple gas giant with soft storms drifting under a velvet atmosphere.",
+                Name = "Purple Gas",
+                Description = "Another purple light exposure planet.",
                 Cost = 480,
                 ColorHex = "#A78BFA",
                 ImageUrl = "/stars/nebula.png",
@@ -71,18 +71,18 @@ public static class StoreSeeder
             },
             new StarType
             {
-                Name = "Hearth",
+                Name = "Cottage Planet",
                 Description = "A whimsical cottage planet, impossibly cosy for something lost in deep space.",
                 Cost = 620,
                 ColorHex = "#D6A86E",
                 ImageUrl = "/stars/hearth.png",
-                ModelUrl = "/models/cottage.glb",
+                ModelUrl = "/models/cottage-small.glb",
                 ModelScale = 1.0,
             },
             new StarType
             {
-                Name = "Sapphire",
-                Description = "A blue supergiant burning fast and impossibly hot.",
+                Name = "Purple Planet",
+                Description = "What??? Purple light exposure again???",
                 Cost = 750,
                 ColorHex = "#4A7FE8",
                 ImageUrl = "/stars/sapphire.png",
@@ -112,7 +112,7 @@ public static class StoreSeeder
             new StarType
             {
                 Name = "Dusk",
-                Description = "A shadowed realistic planet with heavy clouds and weather no telescope can settle.",
+                Description = "A forbbiden city, looks like it has iron revolution before.",
                 Cost = 1450,
                 ColorHex = "#7C8BA1",
                 ImageUrl = "/stars/dusk.png",
@@ -142,7 +142,7 @@ public static class StoreSeeder
             new StarType
             {
                 Name = "Devourer",
-                Description = "A colossal hunter planet with a red eye, metal teeth, and absolutely no manners.",
+                Description = "Anything that gets close to this planet will be swallowed up.",
                 Cost = 3000,
                 ColorHex = "#EF4444",
                 ImageUrl = "/stars/devourer.png",
@@ -153,7 +153,17 @@ public static class StoreSeeder
 
         foreach (var seed in starTypes)
         {
-            var existing = await db.StarTypes.FirstOrDefaultAsync(s => s.Name == seed.Name);
+            var matches = await db.StarTypes
+                .Where(s =>
+                    s.ImageUrl == seed.ImageUrl ||
+                    s.Name == seed.Name ||
+                    (seed.ModelUrl != null && s.ModelUrl == seed.ModelUrl))
+                .OrderByDescending(s => s.Name == seed.Name)
+                .ThenBy(s => s.Cost)
+                .ThenBy(s => s.Id)
+                .ToListAsync();
+
+            var existing = matches.FirstOrDefault();
 
             if (existing is null)
             {
@@ -161,14 +171,34 @@ public static class StoreSeeder
                 continue;
             }
 
-            existing.Description = seed.Description;
-            existing.Cost = seed.Cost;
-            existing.ImageUrl = seed.ImageUrl;
-            existing.ColorHex = seed.ColorHex;
-            existing.ModelUrl = seed.ModelUrl;
-            existing.ModelScale = seed.ModelScale;
+            ApplySeed(existing, seed);
+
+            foreach (var duplicate in matches.Skip(1))
+            {
+                var ownedStars = await db.OwnedStars
+                    .Where(o => o.StarTypeId == duplicate.Id)
+                    .ToListAsync();
+
+                foreach (var ownedStar in ownedStars)
+                {
+                    ownedStar.StarTypeId = existing.Id;
+                }
+
+                db.StarTypes.Remove(duplicate);
+            }
         }
 
         await db.SaveChangesAsync();
+    }
+
+    private static void ApplySeed(StarType existing, StarType seed)
+    {
+        existing.Name = seed.Name;
+        existing.Description = seed.Description;
+        existing.Cost = seed.Cost;
+        existing.ImageUrl = seed.ImageUrl;
+        existing.ColorHex = seed.ColorHex;
+        existing.ModelUrl = seed.ModelUrl;
+        existing.ModelScale = seed.ModelScale;
     }
 }
