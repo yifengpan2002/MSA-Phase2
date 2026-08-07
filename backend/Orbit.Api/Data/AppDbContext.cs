@@ -9,6 +9,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Post> Posts => Set<Post>();
     public DbSet<Support> Supports => Set<Support>();
     public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<StarType> StarTypes => Set<StarType>();
+    public DbSet<OwnedStar> OwnedStars => Set<OwnedStar>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -62,6 +64,25 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany(u => u.Comments)
                 .HasForeignKey(c => c.AuthorId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<StarType>(entity =>
+    {
+        entity.Property(s => s.Name).HasMaxLength(60).IsRequired();
+        entity.Property(s => s.Description).HasMaxLength(200);
+        entity.Property(s => s.ImageUrl).HasMaxLength(300);
+    });
+
+        builder.Entity<OwnedStar>(entity =>
+        {
+            entity.HasOne(o => o.User)
+                  .WithMany(u => u.Stars)
+                  .HasForeignKey(o => o.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(o => o.StarType)
+                  .WithMany()
+                  .HasForeignKey(o => o.StarTypeId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

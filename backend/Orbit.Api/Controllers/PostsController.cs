@@ -38,7 +38,6 @@ public class PostsController(AppDbContext db) : ControllerBase
         return Ok(posts);
     }
 
-
     [HttpPost]
     [Authorize]
     public async Task<ActionResult<PostResponse>> Create(CreatePostRequest request)
@@ -91,5 +90,40 @@ public class PostsController(AppDbContext db) : ControllerBase
             .FirstOrDefaultAsync();
 
         return post is null ? NotFound() : Ok(post);
+    }
+
+    [HttpPost("{id:guid}/support")]
+    [Authorize]
+    public async Task<ActionResult<SupportResponse>> ToggleSupport(Guid id)
+    {
+        var post = await db.Posts.FirstOrDefaultAsync(p => p.Id == id);
+        if (post is null) return NotFound();
+
+        var userId = User.GetUserId();
+
+        if (post.AuthorId == userId)
+            return BadRequest(new { message = "You can't support your own story." });
+
+        var existing = await db.Supports
+            .FirstOrDefaultAsync(s => s.PostId == id && s.UserId == userId);
+
+        if (existing is not null)
+        {
+            // Withdrawing support takes the energy back, so it can't be farmed.
+            db.Supports.Remove(existing);
+            var author = await db.Users.FirstAsync(u => u.Id == post.AuthorId);
+            author.Energy = Math.Max(0, author.Energy - EnergyRules.SupportReward);
+        }
+        else
+        {
+            db.Supports.Add(new Support { PostId = id, UserId = userId });
+            var author = await db.Users.FirstAsync(u => u.Id == post.AuthorId);
+            author.Energy += EnergyRules.SupportReward;
+        }
+
+        await db.SaveChangesAsync();
+
+        var count = await db.Supports.CountAsync(s => s.PostId == id);
+        return Ok(new SupportResponse(count, existing is null));
     }
 }

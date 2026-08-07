@@ -40,7 +40,7 @@ public class UsersController(AppDbContext db) : ControllerBase
             user.AvatarUrl,
             user.CreatedUtc,
             posts.Count,
-            posts.Sum(p => p.EnergyCount),
+            user.Energy,
             posts));
     }
 
