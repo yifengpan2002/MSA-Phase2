@@ -1,4 +1,10 @@
-import { useEffect } from "react";
+import {
+  Component,
+  Suspense,
+  useEffect,
+  useMemo,
+  type ReactNode,
+} from "react";
 import {
   Alert,
   Box,
@@ -12,8 +18,37 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
+import { Canvas } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
+import * as THREE from "three";
 import { useEnergyStore } from "../store/useEnergyStore";
 import type { StarType } from "../types";
+
+const PREVIEW_MODEL_SIZE = 2.35;
+const DEFAULT_PREVIEW_ROTATION: [number, number, number] = [0.18, -0.55, 0.08];
+const MODEL_PREVIEW_ROTATIONS: Record<string, [number, number, number]> = {
+  "/models/planet.glb": [0.08, 0.88, -0.05],
+};
+
+function isModelPath(modelUrl: string | null): modelUrl is string {
+  return (
+    typeof modelUrl === "string" &&
+    modelUrl.startsWith("/models/") &&
+    modelUrl.toLowerCase().endsWith(".glb")
+  );
+}
+
+function isImagePath(imageUrl: string | null | undefined): imageUrl is string {
+  return (
+    typeof imageUrl === "string" &&
+    imageUrl.startsWith("/stars/") &&
+    /\.(png|jpe?g|webp)$/i.test(imageUrl)
+  );
+}
+
+function getPreviewRotation(modelUrl: string): [number, number, number] {
+  return MODEL_PREVIEW_ROTATIONS[modelUrl] ?? DEFAULT_PREVIEW_ROTATION;
+}
 
 export function Store() {
   const { stars, energy, status, error, fetchStars, fetchDaily, clearError } =
@@ -122,32 +157,13 @@ function StarCard({ star }: { star: StarType }) {
     >
       <Box
         sx={{
-          py: 4,
+          py: 3.5,
           display: "grid",
           placeItems: "center",
           background: `radial-gradient(circle at 50% 20%, ${star.colorHex}28, transparent 36%), linear-gradient(135deg, ${star.colorHex}12, transparent)`,
         }}
       >
-        <Box
-          aria-hidden="true"
-          sx={{
-            width: 104,
-            height: 104,
-            borderRadius: "50%",
-            background: `radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.78), ${star.colorHex} 34%, rgba(6, 8, 12, 0.88) 100%)`,
-            boxShadow: `0 0 42px ${star.colorHex}55, inset -18px -22px 30px rgba(0, 0, 0, 0.38)`,
-            position: "relative",
-            "&::after": {
-              content: '""',
-              position: "absolute",
-              inset: "16% 9%",
-              borderRadius: "50%",
-              background:
-                "linear-gradient(135deg, rgba(255, 255, 255, 0.34), transparent 46%)",
-              transform: "rotate(-18deg)",
-            },
-          }}
-        />
+        <PlanetPreviewAvatar star={star} />
       </Box>
 
       <CardContent sx={{ p: 2.5 }}>
@@ -220,5 +236,135 @@ function StarCard({ star }: { star: StarType }) {
         </Stack>
       </CardContent>
     </Card>
+  );
+}
+
+function PlanetPreviewAvatar({ star }: { star: StarType }) {
+  const modelUrl = isModelPath(star.modelUrl) ? star.modelUrl : null;
+  const imageUrl = isImagePath(star.imageUrl) ? star.imageUrl : null;
+  const fallback = imageUrl ? (
+    <PlanetImageAvatar imageUrl={imageUrl} />
+  ) : (
+    <FallbackPlanetAvatar star={star} />
+  );
+
+  return (
+    <Box
+      role="img"
+      aria-label={`${star.name} planet preview`}
+      sx={{
+        width: 128,
+        height: 128,
+        borderRadius: "50%",
+        overflow: "hidden",
+        position: "relative",
+        border: 1,
+        borderColor: "divider",
+        background:
+          "radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.16), rgba(5, 8, 12, 0.88) 68%)",
+        boxShadow: `0 0 48px ${star.colorHex}66`,
+      }}
+    >
+      {modelUrl ? (
+        <PlanetPreviewBoundary fallback={fallback}>
+          <Canvas
+            camera={{ position: [0, 0.15, 4.25], fov: 34 }}
+            dpr={[1, 1.5]}
+            gl={{ antialias: true, alpha: true }}
+          >
+            <ambientLight intensity={1.75} />
+            <directionalLight position={[3, 4, 5]} intensity={3.25} />
+            <directionalLight position={[-3, -1, -2]} intensity={1.05} />
+
+            <Suspense fallback={null}>
+              <PlanetPreviewModel modelUrl={modelUrl} />
+            </Suspense>
+          </Canvas>
+        </PlanetPreviewBoundary>
+      ) : (
+        fallback
+      )}
+    </Box>
+  );
+}
+
+function PlanetImageAvatar({ imageUrl }: { imageUrl: string }) {
+  return (
+    <Box
+      alt=""
+      component="img"
+      src={imageUrl}
+      sx={{
+        display: "block",
+        height: "100%",
+        objectFit: "cover",
+        width: "100%",
+      }}
+    />
+  );
+}
+
+function PlanetPreviewModel({ modelUrl }: { modelUrl: string }) {
+  const { scene } = useGLTF(modelUrl);
+  const rotation = getPreviewRotation(modelUrl);
+
+  const { clone, scale } = useMemo(() => {
+    const clonedScene = scene.clone(true);
+
+    clonedScene.updateMatrixWorld(true);
+
+    const box = new THREE.Box3().setFromObject(clonedScene);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
+
+    clonedScene.position.sub(center);
+
+    return {
+      clone: clonedScene,
+      scale: PREVIEW_MODEL_SIZE / maxAxis,
+    };
+  }, [scene]);
+
+  return (
+    <group rotation={rotation}>
+      <primitive object={clone} scale={scale} />
+    </group>
+  );
+}
+
+class PlanetPreviewBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
+function FallbackPlanetAvatar({ star }: { star: StarType }) {
+  return (
+    <Box
+      sx={{
+        position: "absolute",
+        inset: 0,
+        background: `radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.78), ${star.colorHex} 34%, rgba(6, 8, 12, 0.88) 100%)`,
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          inset: "16% 9%",
+          borderRadius: "50%",
+          background:
+            "linear-gradient(135deg, rgba(255, 255, 255, 0.34), transparent 46%)",
+          transform: "rotate(-18deg)",
+        },
+      }}
+    />
   );
 }
