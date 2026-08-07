@@ -70,6 +70,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         entity.Property(s => s.Name).HasMaxLength(60).IsRequired();
         entity.Property(s => s.Description).HasMaxLength(200);
         entity.Property(s => s.ImageUrl).HasMaxLength(300);
+        entity.Property(s => s.ModelUrl).HasMaxLength(300);
     });
 
         builder.Entity<OwnedStar>(entity =>

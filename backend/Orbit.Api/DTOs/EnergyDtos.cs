@@ -26,7 +26,15 @@ public record StarTypeResponse(
     string ColorHex,
     int OwnedCount
 );
-
+public record GalaxyPlanet(
+    Guid Id,
+    Guid StarTypeId,
+    string Name,
+    string ColorHex,
+    string? ModelUrl,
+    double ModelScale,
+    DateTime AcquiredUtc
+);
 public record PurchaseResponse(int Energy, int OwnedCount);
 
 public record SupportResponse(int EnergyCount, bool SupportedByMe);

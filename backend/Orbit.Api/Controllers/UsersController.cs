@@ -58,4 +58,26 @@ public class UsersController(AppDbContext db) : ControllerBase
 
         return await GetMyProfile();
     }
+
+    [HttpGet("me/galaxy")]
+    public async Task<ActionResult<List<GalaxyPlanet>>> GetMyGalaxy()
+    {
+        var planets = await db.OwnedStars
+            .AsNoTracking()
+            .Where(o => o.UserId == User.GetUserId())
+            // Stable order matters: galaxy positions come from array index,
+            // so this keeps each planet in the same spot between page loads.
+            .OrderBy(o => o.AcquiredUtc)
+            .Select(o => new GalaxyPlanet(
+                o.Id,
+                o.StarTypeId,
+                o.StarType.Name,
+                o.StarType.ColorHex,
+                o.StarType.ModelUrl,
+                o.StarType.ModelScale,
+                o.AcquiredUtc))
+            .ToListAsync();
+
+        return Ok(planets);
+    }
 }

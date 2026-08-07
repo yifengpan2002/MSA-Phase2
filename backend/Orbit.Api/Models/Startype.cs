@@ -9,4 +9,6 @@ public class StarType
     public int Cost { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
     public string ColorHex { get; set; } = "#FFFFFF";
+    public string? ModelUrl { get; set; }
+    public double ModelScale { get; set; } = 1.0;
 }
