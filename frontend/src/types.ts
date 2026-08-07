@@ -69,7 +69,7 @@ export interface PostDetail {
   comments: Comment[];
 }
 
-export type SortOrder = "newest" | "supported" | "oldest";
+export type SortOrder = "newest" | "hottest";
 
 export interface DailyStatus {
   canClaimToday: boolean;
@@ -95,6 +95,7 @@ export interface StarType {
   cost: number;
   imageUrl: string;
   colorHex: string;
+  modelUrl: string | null;
   ownedCount: number;
 }
 
