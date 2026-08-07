@@ -11,22 +11,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var dbPath = Path.Combine(builder.Environment.ContentRootPath, "orbit.db");
-    options.UseSqlite($"Data Source={dbPath}");
+    var connectionString = builder.Configuration.GetConnectionString("Default")
+        ?? throw new InvalidOperationException("Connection string 'Default' is missing.");
+    options.UseNpgsql(connectionString);
 });
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-var allowedOrigins = builder.Configuration
-    .GetSection("Cors:AllowedOrigins")
-    .Get<string[]>() ?? new[]
-    {
-        "http://localhost:5173",
-        "http://localhost:5175",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5175",
-    };
+var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(',')
+    ?? ["http://localhost:5173"];
 
 builder.Services.AddCors(options =>
 {
@@ -62,6 +56,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
     await StoreSeeder.SeedAsync(db);
+    await DemoContentSeeder.SeedAsync(db);
 }
 
 
