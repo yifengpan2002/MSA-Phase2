@@ -98,6 +98,16 @@ export interface StarType {
   ownedCount: number;
 }
 
+export interface GalaxyPlanet {
+  id: string;
+  starTypeId: string;
+  name: string;
+  colorHex: string;
+  modelUrl: string | null;
+  modelScale: number;
+  acquiredUtc: string;
+}
+
 export interface SupportResult {
   energyCount: number;
   supportedByMe: boolean;
