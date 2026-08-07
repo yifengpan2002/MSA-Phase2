@@ -13,7 +13,7 @@ public static class StoreSeeder
             {
                 Name = "Allen Planet",
                 Description = "A copy of Earth, made by aliens.",
-                Cost = 50,
+                Cost = 25,
                 ColorHex = "#E8734A",
                 ImageUrl = "/stars/ember.png",
                 ModelUrl = "/models/alien.glb",
@@ -21,19 +21,9 @@ public static class StoreSeeder
             },
             new StarType
             {
-                Name = "Lava",
-                Description = "A lava planet with a molten surface and a fiery aura.",
-                Cost = 120,
-                ColorHex = "#E8B93F",
-                ImageUrl = "/stars/beacon.png",
-                ModelUrl = "/models/planet.glb",
-                ModelScale = 1.0,
-            },
-            new StarType
-            {
                 Name = "Magma",
                 Description = "A planet filled with the aura of destruction.",
-                Cost = 180,
+                Cost = 90,
                 ColorHex = "#F97316",
                 ImageUrl = "/stars/magma.png",
                 ModelUrl = "/models/lava.glb",
@@ -43,7 +33,7 @@ public static class StoreSeeder
             {
                 Name = "Green Energy",
                 Description = "An asteroid that was destroyed before, but is now full of life again.",
-                Cost = 260,
+                Cost = 130,
                 ColorHex = "#65D67C",
                 ImageUrl = "/stars/garden.png",
                 ModelUrl = "/models/garden.glb",
@@ -53,7 +43,7 @@ public static class StoreSeeder
             {
                 Name = "Stylized Planet",
                 Description = "Legend has it that a child of wind was born.",
-                Cost = 300,
+                Cost = 150,
                 ColorHex = "#35A98B",
                 ImageUrl = "/stars/verdant.png",
                 ModelUrl = "/models/stylized.glb",
@@ -63,7 +53,7 @@ public static class StoreSeeder
             {
                 Name = "Purple Gas",
                 Description = "Another purple light exposure planet.",
-                Cost = 480,
+                Cost = 240,
                 ColorHex = "#A78BFA",
                 ImageUrl = "/stars/nebula.png",
                 ModelUrl = "/models/purple-gas.glb",
@@ -73,7 +63,7 @@ public static class StoreSeeder
             {
                 Name = "Cottage Planet",
                 Description = "A whimsical cottage planet, impossibly cosy for something lost in deep space.",
-                Cost = 620,
+                Cost = 310,
                 ColorHex = "#D6A86E",
                 ImageUrl = "/stars/hearth.png",
                 ModelUrl = "/models/cottage-small.glb",
@@ -83,7 +73,7 @@ public static class StoreSeeder
             {
                 Name = "Purple Planet",
                 Description = "What??? Purple light exposure again???",
-                Cost = 750,
+                Cost = 375,
                 ColorHex = "#4A7FE8",
                 ImageUrl = "/stars/sapphire.png",
                 ModelUrl = "/models/purple.glb",
@@ -91,19 +81,9 @@ public static class StoreSeeder
             },
             new StarType
             {
-                Name = "Crystal",
-                Description = "A glowing crystal world, bright, fragile, and strange.",
-                Cost = 1000,
-                ColorHex = "#7DEBFF",
-                ImageUrl = "/stars/crystal.png",
-                ModelUrl = "/models/crystal.glb",
-                ModelScale = 1.0,
-            },
-            new StarType
-            {
                 Name = "Uranium",
                 Description = "A radioactive emerald world humming with unstable, forbidden energy.",
-                Cost = 1250,
+                Cost = 625,
                 ColorHex = "#B6F44A",
                 ImageUrl = "/stars/uranium.png",
                 ModelUrl = "/models/uranium.glb",
@@ -113,7 +93,7 @@ public static class StoreSeeder
             {
                 Name = "Dusk",
                 Description = "A forbbiden city, looks like it has iron revolution before.",
-                Cost = 1450,
+                Cost = 725,
                 ColorHex = "#7C8BA1",
                 ImageUrl = "/stars/dusk.png",
                 ModelUrl = "/models/dusk.glb",
@@ -123,7 +103,7 @@ public static class StoreSeeder
             {
                 Name = "Solaris",
                 Description = "A molten sun-crowned planet wrapped in flares and old gold heat.",
-                Cost = 1700,
+                Cost = 850,
                 ColorHex = "#F59E0B",
                 ImageUrl = "/stars/solaris.png",
                 ModelUrl = "/models/solar-crown.glb",
@@ -131,19 +111,9 @@ public static class StoreSeeder
             },
             new StarType
             {
-                Name = "Collapse",
-                Description = "What remains after the light goes out. Few ever hold one.",
-                Cost = 2000,
-                ColorHex = "#8B5CF6",
-                ImageUrl = "/stars/collapse.png",
-                ModelUrl = "/models/transformers-_the_planet_cybertron.glb",
-                ModelScale = 1.0,
-            },
-            new StarType
-            {
                 Name = "Devourer",
                 Description = "Anything that gets close to this planet will be swallowed up.",
-                Cost = 3000,
+                Cost = 1500,
                 ColorHex = "#EF4444",
                 ImageUrl = "/stars/devourer.png",
                 ModelUrl = "/models/devourer.glb",
