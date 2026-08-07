@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Orbit.Api.Data;
@@ -19,10 +18,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? new[]
+    {
+        "http://localhost:5173",
+        "http://localhost:5175",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5175",
+    };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy => policy
-        .WithOrigins("http://localhost:5173")
+        .WithOrigins(allowedOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod());
 });
@@ -57,16 +66,14 @@ using (var scope = app.Services.CreateScope())
 
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-}
-else
-{
+app.MapOpenApi();
+app.MapScalarApiReference();
 
+if (!app.Environment.IsDevelopment())
+{
     app.UseHttpsRedirection();
 }
+
 app.UseCors("Frontend");
 
 app.UseAuthentication();
@@ -79,6 +86,12 @@ app.MapGet("/api/dbcheck", async (AppDbContext db) => Results.Ok(new
     users = await db.Users.CountAsync(),
     posts = await db.Posts.CountAsync(),
     supports = await db.Supports.CountAsync(),
+}));
+
+app.MapGet("/api/health", () => Results.Ok(new
+{
+    status = "ok",
+    utc = DateTime.UtcNow,
 }));
 
 app.MapControllers();
