@@ -15,13 +15,13 @@ import { useEnergyStore } from "../store/useEnergyStore";
 
 const PREVIEW_DAYS = [1, 2, 3, 4, 5, 6, 7];
 const REWARDS: Record<number, number> = {
-  1: 10,
-  2: 20,
-  3: 40,
-  4: 80,
-  5: 160,
-  6: 200,
-  7: 200,
+  1: 25,
+  2: 50,
+  3: 100,
+  4: 200,
+  5: 250,
+  6: 250,
+  7: 250,
 };
 
 export function Daily() {
@@ -60,11 +60,11 @@ export function Daily() {
               component="h1"
               sx={{ fontSize: { xs: "3rem", md: "4rem" } }}
             >
-              Daily energy
-            </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1 }}>
-              Come back each day. The reward doubles until day six.
-            </Typography>
+            Daily energy
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 1 }}>
+              Come back each day. The reward doubles, then caps at 250.
+          </Typography>
           </Box>
 
           {error && (

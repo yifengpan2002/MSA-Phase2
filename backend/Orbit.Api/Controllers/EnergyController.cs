@@ -46,8 +46,11 @@ public class EnergyController(AppDbContext db) : ControllerBase
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == User.GetUserId());
         if (user is null) return NotFound();
 
-        var today = DateTime.UtcNow.Date;
-        var lastClaim = user.LastClaimUtc?.Date;
+        var today = GetAppDate(DateTime.UtcNow);
+
+        DateOnly? lastClaim = user.LastClaimUtc is null
+            ? null
+            : GetAppDate(user.LastClaimUtc.Value);
 
         if (lastClaim == today)
             return Conflict(new { message = "You've already claimed today. Come back tomorrow." });
