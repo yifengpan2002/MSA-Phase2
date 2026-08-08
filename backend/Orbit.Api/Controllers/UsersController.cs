@@ -81,6 +81,47 @@ public class UsersController(AppDbContext db) : ControllerBase
         return Ok(planets);
     }
 
+    [HttpGet("galaxy/leaderboard")]
+    public async Task<ActionResult<GalaxyLeaderboardResponse>> GetGalaxyLeaderboard()
+    {
+        var currentUserId = User.GetUserId();
+
+        var users = await db.Users
+            .AsNoTracking()
+            .Select(user => new
+            {
+                UserId = user.Id,
+                user.Username,
+                user.AvatarUrl,
+                PlanetCount = db.OwnedStars.Count(star => star.UserId == user.Id),
+                TotalEnergySpent = db.OwnedStars
+                    .Where(star => star.UserId == user.Id)
+                    .Sum(star => (int?)star.StarType.Cost) ?? 0
+            })
+            .OrderByDescending(user => user.TotalEnergySpent)
+            .ThenByDescending(user => user.PlanetCount)
+            .ThenBy(user => user.Username)
+            .ToListAsync();
+
+        var rankedUsers = users
+            .Select((user, index) => new GalaxyLeaderboardEntry(
+                user.UserId,
+                user.Username,
+                user.AvatarUrl,
+                user.PlanetCount,
+                user.TotalEnergySpent,
+                index + 1))
+            .ToList();
+
+        var topUsers = rankedUsers.Take(3).ToList();
+        var currentUser = rankedUsers.FirstOrDefault(user => user.UserId == currentUserId);
+
+        return Ok(new GalaxyLeaderboardResponse(
+            topUsers,
+            currentUser,
+            rankedUsers.Count));
+    }
+
     [AllowAnonymous]
     [HttpGet("{username}")]
     public async Task<ActionResult<ProfileResponse>> GetPublicProfile(string username)

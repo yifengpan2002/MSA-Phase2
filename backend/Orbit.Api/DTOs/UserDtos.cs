@@ -19,6 +19,21 @@ public record ProfileResponse(
     List<ProfilePostSummary> Posts
 );
 
+public record GalaxyLeaderboardEntry(
+    Guid UserId,
+    string Username,
+    string? AvatarUrl,
+    int PlanetCount,
+    int TotalEnergySpent,
+    int Rank
+);
+
+public record GalaxyLeaderboardResponse(
+    List<GalaxyLeaderboardEntry> TopUsers,
+    GalaxyLeaderboardEntry? CurrentUser,
+    int TotalUsers
+);
+
 public class UpdateAvatarRequest
 {
     [Required]
