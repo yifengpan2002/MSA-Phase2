@@ -81,6 +81,24 @@ public class UsersController(AppDbContext db) : ControllerBase
         return Ok(planets);
     }
 
+    [HttpDelete("me/galaxy/{ownedStarId:guid}")]
+    public async Task<IActionResult> DeleteOwnedPlanet(Guid ownedStarId)
+    {
+        var userId = User.GetUserId();
+
+        var ownedPlanet = await db.OwnedStars
+            .FirstOrDefaultAsync(o => o.Id == ownedStarId && o.UserId == userId);
+
+        if (ownedPlanet is null) return NotFound();
+
+        // Removing a planet is cosmetic cleanup only. Energy is not refunded,
+        // otherwise users could repeatedly buy/delete planets to manipulate progress.
+        db.OwnedStars.Remove(ownedPlanet);
+        await db.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     [HttpGet("galaxy/leaderboard")]
     public async Task<ActionResult<GalaxyLeaderboardResponse>> GetGalaxyLeaderboard()
     {
