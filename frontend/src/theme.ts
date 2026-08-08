@@ -8,7 +8,7 @@ const fonts = {
   mono: '"JetBrains Mono", "SFMono-Regular", Consolas, monospace',
 };
 
-export function createOrbitTheme(mode: OrbitThemeMode = "light") {
+export function createOrbitTheme(mode: OrbitThemeMode = "dark") {
   const isDark = mode === "dark";
 
   const palette = {

@@ -20,9 +20,7 @@ function getInitialMode(): OrbitThemeMode {
     /* localStorage can be unavailable in private or restricted contexts */
   }
 
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return "dark";
 }
 
 export function ColorModeProvider({ children }: { children: ReactNode }) {
