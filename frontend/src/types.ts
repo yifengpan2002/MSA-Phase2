@@ -109,6 +109,21 @@ export interface GalaxyPlanet {
   acquiredUtc: string;
 }
 
+export interface GalaxyLeaderboardEntry {
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
+  planetCount: number;
+  totalEnergySpent: number;
+  rank: number;
+}
+
+export interface GalaxyLeaderboardResponse {
+  topUsers: GalaxyLeaderboardEntry[];
+  currentUser: GalaxyLeaderboardEntry | null;
+  totalUsers: number;
+}
+
 export interface SupportResult {
   energyCount: number;
   supportedByMe: boolean;
