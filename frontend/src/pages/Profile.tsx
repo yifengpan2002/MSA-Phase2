@@ -3,6 +3,7 @@ import {
   Alert,
   Avatar,
   Box,
+  Button,
   Card,
   CardActionArea,
   CardContent,
@@ -16,7 +17,7 @@ import {
 import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
 import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/api";
 import { useProfileStore } from "../store/useProfileStore";
 import type { GalaxyPlanet, Profile as ProfileData } from "../types";
@@ -248,6 +249,20 @@ function ProfileHeader({
         <Typography color="text.secondary" sx={{ mt: 1, fontSize: 14 }}>
           Writing since {new Date(profile.createdUtc).toLocaleDateString()}
         </Typography>
+
+        <Button
+          component={RouterLink}
+          to={
+            isOwner
+              ? "/galaxy"
+              : `/users/${encodeURIComponent(profile.username)}/galaxy`
+          }
+          startIcon={<AutoAwesomeOutlinedIcon />}
+          variant="outlined"
+          sx={{ mt: 2 }}
+        >
+          Galaxy
+        </Button>
       </Box>
     </Stack>
   );
