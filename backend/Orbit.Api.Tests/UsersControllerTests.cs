@@ -82,5 +82,49 @@ public class UsersControllerTests
         Assert.Equal(3, response.CurrentUser?.Rank);
         Assert.Equal(50, response.CurrentUser?.TotalEnergySpent);
     }
-}
 
+    [Fact]
+    public async Task DeleteOwnedPlanet_RemovesOnlyCurrentUsersPlanet()
+    {
+        await using var db = TestHelpers.CreateDb();
+        var user = new User { Username = "owner" };
+        var star = new StarType { Name = "Purple", Description = "", Cost = 100, ImageUrl = "", ColorHex = "#fff" };
+        var ownedStar = new OwnedStar { User = user, StarType = star };
+
+        db.Users.Add(user);
+        db.StarTypes.Add(star);
+        db.OwnedStars.Add(ownedStar);
+        await db.SaveChangesAsync();
+
+        var controller = new UsersController(db);
+        TestHelpers.SignIn(controller, user);
+
+        var result = await controller.DeleteOwnedPlanet(ownedStar.Id);
+
+        Assert.IsType<NoContentResult>(result);
+        Assert.Empty(db.OwnedStars);
+    }
+
+    [Fact]
+    public async Task DeleteOwnedPlanet_ReturnsNotFound_ForAnotherUsersPlanet()
+    {
+        await using var db = TestHelpers.CreateDb();
+        var owner = new User { Username = "owner" };
+        var other = new User { Username = "other" };
+        var star = new StarType { Name = "Purple", Description = "", Cost = 100, ImageUrl = "", ColorHex = "#fff" };
+        var ownedStar = new OwnedStar { User = owner, StarType = star };
+
+        db.Users.AddRange(owner, other);
+        db.StarTypes.Add(star);
+        db.OwnedStars.Add(ownedStar);
+        await db.SaveChangesAsync();
+
+        var controller = new UsersController(db);
+        TestHelpers.SignIn(controller, other);
+
+        var result = await controller.DeleteOwnedPlanet(ownedStar.Id);
+
+        Assert.IsType<NotFoundResult>(result);
+        Assert.Single(db.OwnedStars);
+    }
+}

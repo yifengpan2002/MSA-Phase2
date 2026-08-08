@@ -103,6 +103,11 @@ export const api = {
 
   getMyGalaxy: () => request<GalaxyPlanet[]>("/users/me/galaxy"),
 
+  deleteOwnedPlanet: (ownedPlanetId: string) =>
+    request<void>(`/users/me/galaxy/${ownedPlanetId}`, {
+      method: "DELETE",
+    }),
+
   getGalaxyLeaderboard: () =>
     request<GalaxyLeaderboardResponse>("/users/galaxy/leaderboard"),
 

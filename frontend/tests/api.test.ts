@@ -279,4 +279,22 @@ describe("api store", () => {
       }),
     );
   });
+
+  it("removes an owned planet from the user's galaxy", async () => {
+    localStorage.setItem("orbit.token", "fake-token");
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await api.deleteOwnedPlanet("owned-planet-1");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:5000/api/users/me/galaxy/owned-planet-1",
+      expect.objectContaining({
+        method: "DELETE",
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+          Authorization: "Bearer fake-token",
+        }),
+      }),
+    );
+  });
 });
