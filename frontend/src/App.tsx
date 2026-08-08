@@ -27,6 +27,7 @@ export default function App() {
           <Route path="/galaxy" element={<Galaxy />} />
         </Route>
         <Route path="/forum/:id" element={<PostDetail />} />
+        <Route path="/users/:username" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   Alert,
   Avatar,
@@ -15,16 +15,87 @@ import {
 } from "@mui/material";
 import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
 import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
-import { useNavigate } from "react-router-dom";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import { useNavigate, useParams } from "react-router-dom";
+import { api } from "../api/api";
 import { useProfileStore } from "../store/useProfileStore";
+import type { GalaxyPlanet, Profile as ProfileData } from "../types";
+
+type PageStatus = "idle" | "loading" | "success" | "error";
 
 export function Profile() {
-  const { profile, status, error, fetchProfile, clearError } =
-    useProfileStore();
+  const { username } = useParams<{ username?: string }>();
+  const isPublicProfile = Boolean(username);
+
+  const {
+    profile: myProfile,
+    status: myStatus,
+    error: myError,
+    fetchProfile,
+    clearError,
+  } = useProfileStore();
+
+  const [publicProfile, setPublicProfile] = useState<ProfileData | null>(null);
+  const [publicStatus, setPublicStatus] = useState<PageStatus>("idle");
+  const [publicError, setPublicError] = useState("");
+  const [planets, setPlanets] = useState<GalaxyPlanet[]>([]);
 
   useEffect(() => {
-    void fetchProfile();
-  }, [fetchProfile]);
+    let isMounted = true;
+
+    async function loadProfile() {
+      if (isPublicProfile) {
+        if (!username) return;
+
+        try {
+          setPublicStatus("loading");
+          setPublicError("");
+
+          const [profileData, galaxyData] = await Promise.all([
+            api.getUserProfile(username),
+            api.getUserGalaxy(username),
+          ]);
+
+          if (!isMounted) return;
+
+          setPublicProfile(profileData);
+          setPlanets(galaxyData);
+          setPublicStatus("success");
+        } catch (error) {
+          if (!isMounted) return;
+
+          setPublicError(
+            error instanceof Error
+              ? error.message
+              : "Could not load this profile.",
+          );
+          setPublicStatus("error");
+        }
+
+        return;
+      }
+
+      void fetchProfile();
+
+      try {
+        const galaxyData = await api.getMyGalaxy();
+        if (isMounted) setPlanets(galaxyData);
+      } catch {
+        if (isMounted) setPlanets([]);
+      }
+    }
+
+    void loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchProfile, isPublicProfile, username]);
+
+  const profile = isPublicProfile ? publicProfile : myProfile;
+  const status = isPublicProfile ? publicStatus : myStatus;
+  const error = isPublicProfile ? publicError : myError;
+  const isOwner = !isPublicProfile;
 
   if (status === "loading" || status === "idle") {
     return (
@@ -37,7 +108,7 @@ export function Profile() {
   if (status === "error" || !profile) {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error">{error || "Profile not found."}</Alert>
       </Container>
     );
   }
@@ -53,30 +124,39 @@ export function Profile() {
     >
       <Container maxWidth="lg">
         <Stack spacing={5}>
-          {error && (
+          {error && isOwner && (
             <Alert severity="error" onClose={clearError}>
               {error}
             </Alert>
           )}
 
-          <ProfileHeader />
-          <StoryGrid />
+          <ProfileHeader profile={profile} isOwner={isOwner} />
+          <PlanetGrid
+            planets={planets}
+            isOwner={isOwner}
+            username={profile.username}
+          />
+          <StoryGrid profile={profile} isOwner={isOwner} />
         </Stack>
       </Container>
     </Box>
   );
 }
 
-function ProfileHeader() {
-  const { profile, isUploading, uploadAvatar } = useProfileStore();
+function ProfileHeader({
+  profile,
+  isOwner,
+}: {
+  profile: ProfileData;
+  isOwner: boolean;
+}) {
+  const { isUploading, uploadAvatar } = useProfileStore();
   const fileInput = useRef<HTMLInputElement>(null);
-
-  if (!profile) return null;
 
   function handleFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (file) void uploadAvatar(file);
-    event.target.value = ""; // lets you pick the same file twice
+    if (file && isOwner) void uploadAvatar(file);
+    event.target.value = "";
   }
 
   return (
@@ -106,7 +186,7 @@ function ProfileHeader() {
           {profile.username.charAt(0).toUpperCase()}
         </Avatar>
 
-        {isUploading && (
+        {isOwner && isUploading && (
           <Box
             sx={{
               position: "absolute",
@@ -121,30 +201,34 @@ function ProfileHeader() {
           </Box>
         )}
 
-        <IconButton
-          onClick={() => fileInput.current?.click()}
-          disabled={isUploading}
-          aria-label="Change avatar"
-          sx={{
-            position: "absolute",
-            right: -4,
-            bottom: -4,
-            border: 1,
-            borderColor: "divider",
-            backgroundColor: "background.paper",
-            "&:hover": { backgroundColor: "background.paper" },
-          }}
-        >
-          <PhotoCameraOutlinedIcon fontSize="small" />
-        </IconButton>
+        {isOwner && (
+          <>
+            <IconButton
+              onClick={() => fileInput.current?.click()}
+              disabled={isUploading}
+              aria-label="Change avatar"
+              sx={{
+                position: "absolute",
+                right: -4,
+                bottom: -4,
+                border: 1,
+                borderColor: "divider",
+                backgroundColor: "background.paper",
+                "&:hover": { backgroundColor: "background.paper" },
+              }}
+            >
+              <PhotoCameraOutlinedIcon fontSize="small" />
+            </IconButton>
 
-        <input
-          ref={fileInput}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={handleFile}
-        />
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleFile}
+            />
+          </>
+        )}
       </Box>
 
       <Box>
@@ -156,7 +240,7 @@ function ProfileHeader() {
           {profile.username}
         </Typography>
 
-        <Stack direction="row" spacing={3} sx={{ mt: 1 }}>
+        <Stack direction="row" spacing={3} sx={{ mt: 1, flexWrap: "wrap" }}>
           <Stat value={profile.postCount} label="stories" />
           <Stat value={profile.totalEnergy} label="energy" accent />
         </Stack>
@@ -166,6 +250,89 @@ function ProfileHeader() {
         </Typography>
       </Box>
     </Stack>
+  );
+}
+
+function PlanetGrid({
+  planets,
+  isOwner,
+  username,
+}: {
+  planets: GalaxyPlanet[];
+  isOwner: boolean;
+  username: string;
+}) {
+  return (
+    <Box>
+      <Typography variant="h2" sx={{ fontSize: "2rem", mb: 2.5 }}>
+        {isOwner ? "Your galaxy" : `${username}'s galaxy`}
+      </Typography>
+
+      {planets.length === 0 ? (
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 4,
+            textAlign: "center",
+            borderStyle: "dashed",
+            borderColor: "divider",
+          }}
+        >
+          <Typography color="text.secondary">No planets yet.</Typography>
+        </Paper>
+      ) : (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(4, 1fr)",
+            },
+            gap: 2,
+          }}
+        >
+          {planets.map((planet) => (
+            <Card key={planet.id} variant="outlined">
+              <CardContent>
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  sx={{ alignItems: "center" }}
+                >
+                  <Box
+                    sx={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: "50%",
+                      backgroundColor: planet.colorHex,
+                      boxShadow: `0 0 24px ${planet.colorHex}`,
+                    }}
+                  />
+
+                  <Box>
+                    <Typography variant="h6">{planet.name}</Typography>
+                    <Stack
+                      direction="row"
+                      spacing={0.75}
+                      sx={{ alignItems: "center" }}
+                    >
+                      <AutoAwesomeOutlinedIcon
+                        fontSize="small"
+                        sx={{ color: "primary.main" }}
+                      />
+                      <Typography color="text.secondary" sx={{ fontSize: 13 }}>
+                        owned planet
+                      </Typography>
+                    </Stack>
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
+    </Box>
   );
 }
 
@@ -196,11 +363,14 @@ function Stat({
   );
 }
 
-function StoryGrid() {
-  const profile = useProfileStore((state) => state.profile);
+function StoryGrid({
+  profile,
+  isOwner,
+}: {
+  profile: ProfileData;
+  isOwner: boolean;
+}) {
   const navigate = useNavigate();
-
-  if (!profile) return null;
 
   if (profile.posts.length === 0) {
     return (
@@ -214,7 +384,9 @@ function StoryGrid() {
         }}
       >
         <Typography color="text.secondary">
-          No stories yet. Write your first one and start earning energy.
+          {isOwner
+            ? "No stories yet. Write your first one and start earning energy."
+            : "This writer has not posted any stories yet."}
         </Typography>
       </Paper>
     );
@@ -223,7 +395,7 @@ function StoryGrid() {
   return (
     <Box>
       <Typography variant="h2" sx={{ fontSize: "2rem", mb: 2.5 }}>
-        Your stories
+        {isOwner ? "Your stories" : `${profile.username}'s stories`}
       </Typography>
 
       <Box

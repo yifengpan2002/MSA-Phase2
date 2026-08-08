@@ -111,21 +111,40 @@ export function PostDetail() {
               spacing={1.5}
               sx={{ mt: 2.5, flexWrap: "wrap", alignItems: "center" }}
             >
-              <Avatar
-                src={post.authorAvatarUrl ?? undefined}
-                sx={{
-                  width: 34,
-                  height: 34,
-                  fontSize: 14,
-                  color: "primary.main",
-                  backgroundColor: "rgba(31, 138, 112, 0.10)",
-                }}
+              <Link
+                component={RouterLink}
+                to={`/users/${encodeURIComponent(post.authorName)}`}
+                underline="none"
+                aria-label={`View ${post.authorName}'s profile`}
+                sx={{ display: "inline-flex", borderRadius: "50%" }}
               >
-                {post.authorName.charAt(0).toUpperCase()}
-              </Avatar>
+                <Avatar
+                  src={post.authorAvatarUrl ?? undefined}
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    fontSize: 14,
+                    color: "primary.main",
+                    backgroundColor: "rgba(31, 138, 112, 0.10)",
+                    cursor: "pointer",
+                  }}
+                >
+                  {post.authorName.charAt(0).toUpperCase()}
+                </Avatar>
+              </Link>
 
               <Typography color="text.secondary" sx={{ fontSize: 14 }}>
-                By {post.authorName} -{" "}
+                By{" "}
+                <Link
+                  component={RouterLink}
+                  to={`/users/${encodeURIComponent(post.authorName)}`}
+                  underline="hover"
+                  color="inherit"
+                  sx={{ fontWeight: 700 }}
+                >
+                  {post.authorName}
+                </Link>{" "}
+                -{" "}
                 {new Date(post.createdUtc).toLocaleDateString()}
               </Typography>
 
@@ -276,25 +295,39 @@ function CommentRow({ comment }: { comment: Comment }) {
 
   return (
     <Stack direction="row" spacing={2}>
-      <Avatar
-        src={comment.authorAvatarUrl ?? undefined}
-        sx={{
-          width: 38,
-          height: 38,
-          fontSize: 15,
-          flexShrink: 0,
-          color: "primary.main",
-          backgroundColor: "rgba(31, 138, 112, 0.10)",
-        }}
+      <Link
+        component={RouterLink}
+        to={`/users/${encodeURIComponent(comment.authorName)}`}
+        underline="none"
+        aria-label={`View ${comment.authorName}'s profile`}
+        sx={{ flexShrink: 0, borderRadius: "50%" }}
       >
-        {comment.authorName.charAt(0).toUpperCase()}
-      </Avatar>
+        <Avatar
+          src={comment.authorAvatarUrl ?? undefined}
+          sx={{
+            width: 38,
+            height: 38,
+            fontSize: 15,
+            color: "primary.main",
+            backgroundColor: "rgba(31, 138, 112, 0.10)",
+            cursor: "pointer",
+          }}
+        >
+          {comment.authorName.charAt(0).toUpperCase()}
+        </Avatar>
+      </Link>
 
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
+          <Link
+            component={RouterLink}
+            to={`/users/${encodeURIComponent(comment.authorName)}`}
+            underline="hover"
+            color="inherit"
+            sx={{ fontWeight: 600, fontSize: 14 }}
+          >
             {comment.authorName}
-          </Typography>
+          </Link>
           <Typography color="text.secondary" sx={{ fontSize: 13 }}>
             {relativeTime(comment.createdUtc)}
           </Typography>

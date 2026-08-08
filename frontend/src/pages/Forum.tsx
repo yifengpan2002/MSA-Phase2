@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Alert,
   Avatar,
@@ -26,7 +27,6 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 import TipsAndUpdatesOutlinedIcon from "@mui/icons-material/TipsAndUpdatesOutlined";
 import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import { usePostStore } from "../store/usePostStore";
-import { relativeTime } from "../helper/timeFormat";
 import type { Post, SortOrder } from "../types";
 
 const PREVIEW_LENGTH = 200;
@@ -253,21 +253,46 @@ function PostCard({ post }: { post: Post }) {
             </Typography>
 
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <Avatar
+              <Box
+                component={RouterLink}
+                to={`/users/${encodeURIComponent(post.authorName)}`}
+                onClick={(event) => event.stopPropagation()}
+                aria-label={`View ${post.authorName}'s profile`}
                 sx={{
-                  width: 26,
-                  height: 26,
-                  fontSize: 12,
+                  display: "inline-flex",
                   flexShrink: 0,
-                  color: "primary.main",
-                  backgroundColor: "rgba(31, 138, 112, 0.10)",
+                  borderRadius: "50%",
+                  textDecoration: "none",
                 }}
               >
-                {post.authorName.charAt(0).toUpperCase()}
-              </Avatar>
+                <Avatar
+                  sx={{
+                    width: 26,
+                    height: 26,
+                    fontSize: 12,
+                    color: "primary.main",
+                    backgroundColor: "rgba(31, 138, 112, 0.10)",
+                    cursor: "pointer",
+                  }}
+                >
+                  {post.authorName.charAt(0).toUpperCase()}
+                </Avatar>
+              </Box>
 
-              <Typography color="text.secondary" sx={{ fontSize: 14 }}>
-                By {post.authorName} - {relativeTime(post.createdUtc)}
+              <Typography
+                component={RouterLink}
+                to={`/users/${encodeURIComponent(post.authorName)}`}
+                onClick={(event) => event.stopPropagation()}
+                sx={{
+                  color: "text.primary",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                  "&:hover": {
+                    color: "primary.main",
+                  },
+                }}
+              >
+                {post.authorName}
               </Typography>
             </Stack>
           </Box>

@@ -112,4 +112,10 @@ export const api = {
 
   toggleSupport: (postId: string) =>
     request<SupportResult>(`/posts/${postId}/support`, { method: "POST" }),
+
+  getUserProfile: (username: string) =>
+    request<Profile>(`/users/${encodeURIComponent(username)}`),
+
+  getUserGalaxy: (username: string) =>
+    request<GalaxyPlanet[]>(`/users/${encodeURIComponent(username)}/galaxy`),
 };
