@@ -31,6 +31,7 @@ import {
 } from "@mui/material";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { api } from "../api/api";
@@ -74,6 +75,8 @@ export function Galaxy() {
   const [status, setStatus] = useState<GalaxyStatus>("loading");
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const galaxyGroupRef = useRef<THREE.Group | null>(null);
 
@@ -99,6 +102,7 @@ export function Galaxy() {
         setPlanets(result);
         setLeaderboard(leaderboardResult);
         setSelectedId(null);
+        setDeleteError(null);
         setStatus("ready");
       } catch (loadError) {
         if (!active) return;
@@ -124,6 +128,35 @@ export function Galaxy() {
     () => planets.find((planet) => planet.id === selectedId) ?? null,
     [planets, selectedId],
   );
+
+  async function handleDeletePlanet(planet: GalaxyPlanet) {
+    if (isPublicGalaxy) return;
+
+    const confirmed = window.confirm(
+      `Remove ${planet.name} from your galaxy? This will not refund energy.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingId(planet.id);
+    setDeleteError(null);
+
+    try {
+      await api.deleteOwnedPlanet(planet.id);
+      setPlanets((currentPlanets) =>
+        currentPlanets.filter((currentPlanet) => currentPlanet.id !== planet.id),
+      );
+      setSelectedId(null);
+      setLeaderboard(await api.getGalaxyLeaderboard().catch(() => null));
+    } catch (deletePlanetError) {
+      setDeleteError(
+        deletePlanetError instanceof Error
+          ? deletePlanetError.message
+          : "Could not remove this planet.",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   if (status === "loading") {
     return (
@@ -290,7 +323,10 @@ export function Galaxy() {
         <PlanetPanel
           count={planets.length}
           planet={selectedPlanet}
+          deleteError={deleteError}
+          deleting={Boolean(selectedPlanet && deletingId === selectedPlanet.id)}
           onClear={() => setSelectedId(null)}
+          onDelete={isPublicGalaxy ? undefined : handleDeletePlanet}
         />
       )}
     </Box>
@@ -889,11 +925,17 @@ function EmptyGalaxy({
 function PlanetPanel({
   count,
   planet,
+  deleteError,
+  deleting,
   onClear,
+  onDelete,
 }: {
   count: number;
   planet: GalaxyPlanet | null;
+  deleteError: string | null;
+  deleting: boolean;
   onClear: () => void;
+  onDelete?: (planet: GalaxyPlanet) => void;
 }) {
   return (
     <Box
@@ -927,6 +969,12 @@ function PlanetPanel({
 
         {planet ? (
           <>
+            {deleteError && (
+              <Alert severity="error" sx={{ backgroundColor: "rgba(35,6,8,0.9)" }}>
+                {deleteError}
+              </Alert>
+            )}
+
             <Box>
               <Typography
                 variant="h2"
@@ -958,13 +1006,40 @@ function PlanetPanel({
               </Typography>
             </Box>
 
-            <Button
-              onClick={onClear}
-              variant="outlined"
-              sx={{ color: "common.white" }}
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              sx={{ justifyContent: "space-between" }}
             >
-              Back to full galaxy
-            </Button>
+              <Button
+                onClick={onClear}
+                variant="outlined"
+                sx={{ color: "common.white" }}
+              >
+                Back to full galaxy
+              </Button>
+
+              {onDelete && (
+                <Button
+                  color="error"
+                  disabled={deleting}
+                  onClick={() => onDelete(planet)}
+                  startIcon={<DeleteOutlineOutlinedIcon />}
+                  variant="outlined"
+                  sx={{
+                    borderColor: "rgba(255,104,104,0.45)",
+                    color: "#ff9a9a",
+                    ml: { sm: "auto" },
+                    "&:hover": {
+                      borderColor: "rgba(255,104,104,0.76)",
+                      backgroundColor: "rgba(255,104,104,0.12)",
+                    },
+                  }}
+                >
+                  {deleting ? "Removing..." : "Remove"}
+                </Button>
+              )}
+            </Stack>
           </>
         ) : (
           <Typography sx={{ color: "rgba(255,255,255,0.72)" }}>
