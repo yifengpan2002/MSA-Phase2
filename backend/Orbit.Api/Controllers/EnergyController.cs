@@ -20,8 +20,12 @@ public class EnergyController(AppDbContext db) : ControllerBase
             .FirstOrDefaultAsync(u => u.Id == User.GetUserId());
         if (user is null) return NotFound();
 
-        var today = DateTime.UtcNow.Date;
-        var lastClaim = user.LastClaimUtc?.Date;
+        var today = GetAppDate(DateTime.UtcNow);
+
+        DateOnly? lastClaim = user.LastClaimUtc is null
+            ? null
+            : GetAppDate(user.LastClaimUtc.Value);
+
         var canClaim = lastClaim != today;
 
         // A gap of more than one day breaks the streak, so the next claim starts over.
@@ -62,5 +66,22 @@ public class EnergyController(AppDbContext db) : ControllerBase
 
         return Ok(new ClaimResponse(
             awarded, user.CurrentStreak, user.LongestStreak, user.Energy, streakReset));
+    }
+
+    private static DateOnly GetAppDate(DateTime utc)
+    {
+        TimeZoneInfo zone;
+
+        try
+        {
+            zone = TimeZoneInfo.FindSystemTimeZoneById("Pacific/Auckland"); // Linux/Azure
+        }
+        catch
+        {
+            zone = TimeZoneInfo.FindSystemTimeZoneById("New Zealand Standard Time"); // Windows
+        }
+
+        var local = TimeZoneInfo.ConvertTimeFromUtc(utc, zone);
+        return DateOnly.FromDateTime(local);
     }
 }
