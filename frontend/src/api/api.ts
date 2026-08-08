@@ -9,6 +9,7 @@ import {
   type DailyStatus,
   type ClaimResult,
   type GalaxyPlanet,
+  type GalaxyLeaderboardResponse,
   type StarType,
 } from "../types";
 
@@ -101,6 +102,9 @@ export const api = {
   getStars: () => request<StarType[]>("/store/stars"),
 
   getMyGalaxy: () => request<GalaxyPlanet[]>("/users/me/galaxy"),
+
+  getGalaxyLeaderboard: () =>
+    request<GalaxyLeaderboardResponse>("/users/galaxy/leaderboard"),
 
   purchaseStar: (id: string) =>
     request<{ energy: number; ownedCount: number }>(

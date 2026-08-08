@@ -20,20 +20,26 @@ import {
 import * as THREE from "three";
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   CircularProgress,
   Container,
+  Divider,
   Stack,
   Typography,
 } from "@mui/material";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useParams } from "react-router-dom";
 import { api } from "../api/api";
 import { getGalaxyLayout } from "../helper/galaxyLayout";
-import type { GalaxyPlanet } from "../types";
+import type {
+  GalaxyLeaderboardEntry,
+  GalaxyLeaderboardResponse,
+  GalaxyPlanet,
+} from "../types";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 type GalaxyStatus = "loading" | "ready" | "error";
@@ -57,7 +63,14 @@ function isModelPath(modelUrl: string | null): modelUrl is string {
 }
 
 export function Galaxy() {
+  const { username } = useParams<{ username?: string }>();
+  const isPublicGalaxy = Boolean(username);
+  const encodedUsername = username ? encodeURIComponent(username) : "";
+  const profilePath = isPublicGalaxy ? `/users/${encodedUsername}` : "/profile";
+
   const [planets, setPlanets] = useState<GalaxyPlanet[]>([]);
+  const [leaderboard, setLeaderboard] =
+    useState<GalaxyLeaderboardResponse | null>(null);
   const [status, setStatus] = useState<GalaxyStatus>("loading");
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -72,17 +85,29 @@ export function Galaxy() {
       setError(null);
 
       try {
-        const result = await api.getMyGalaxy();
+        const [result, leaderboardResult] = await Promise.all([
+          isPublicGalaxy && username
+            ? api.getUserGalaxy(username)
+            : api.getMyGalaxy(),
+          isPublicGalaxy
+            ? Promise.resolve(null)
+            : api.getGalaxyLeaderboard().catch(() => null),
+        ]);
+
         if (!active) return;
+
         setPlanets(result);
+        setLeaderboard(leaderboardResult);
         setSelectedId(null);
         setStatus("ready");
       } catch (loadError) {
         if (!active) return;
+
+        setLeaderboard(null);
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "Could not load your galaxy.",
+            : "Could not load this galaxy.",
         );
         setStatus("error");
       }
@@ -93,7 +118,7 @@ export function Galaxy() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [isPublicGalaxy, username]);
 
   const selectedPlanet = useMemo(
     () => planets.find((planet) => planet.id === selectedId) ?? null,
@@ -112,10 +137,10 @@ export function Galaxy() {
     return (
       <Container maxWidth="md" sx={{ py: 6 }}>
         <Alert severity="error" sx={{ mb: 3 }}>
-          {error ?? "Could not load your galaxy."}
+          {error ?? "Could not load this galaxy."}
         </Alert>
-        <Button component={RouterLink} to="/store" variant="contained">
-          Go to store
+        <Button component={RouterLink} to={profilePath} variant="contained">
+          Back to profile
         </Button>
       </Container>
     );
@@ -217,7 +242,7 @@ export function Galaxy() {
       >
         <Button
           component={RouterLink}
-          to="/profile"
+          to={profilePath}
           startIcon={<ArrowBackOutlinedIcon />}
           sx={{
             alignSelf: "flex-start",
@@ -240,7 +265,7 @@ export function Galaxy() {
               textShadow: "0 12px 36px rgba(0,0,0,0.45)",
             }}
           >
-            My galaxy
+            {isPublicGalaxy ? `${username}'s galaxy` : "My galaxy"}
           </Typography>
           <Typography
             sx={{
@@ -250,14 +275,17 @@ export function Galaxy() {
               maxWidth: 360,
             }}
           >
-            Every planet here is one you bought with energy from writing,
-            supporting, and returning daily.
+            {isPublicGalaxy
+              ? "Every planet here is part of this writer's collected galaxy."
+              : "Every planet here is one you bought with energy from writing, supporting, and returning daily."}
           </Typography>
         </Box>
       </Stack>
 
+      {!isPublicGalaxy && <LeaderboardPanel leaderboard={leaderboard} />}
+
       {planets.length === 0 ? (
-        <EmptyGalaxy />
+        <EmptyGalaxy isPublicGalaxy={isPublicGalaxy} profilePath={profilePath} />
       ) : (
         <PlanetPanel
           count={planets.length}
@@ -638,7 +666,188 @@ function Atmosphere({ color }: { color: string }) {
   );
 }
 
-function EmptyGalaxy() {
+function LeaderboardPanel({
+  leaderboard,
+}: {
+  leaderboard: GalaxyLeaderboardResponse | null;
+}) {
+  if (!leaderboard || leaderboard.totalUsers === 0) return null;
+
+  const currentUser = leaderboard.currentUser;
+  const currentUserIsTopRanked = Boolean(
+    currentUser &&
+      leaderboard.topUsers.some((entry) => entry.userId === currentUser.userId),
+  );
+
+  return (
+    <Box
+      component="aside"
+      sx={{
+        position: "absolute",
+        top: { xs: 218, md: 34 },
+        right: { xs: 18, md: 42 },
+        width: { xs: "calc(100% - 36px)", sm: 340 },
+        maxWidth: 360,
+        pointerEvents: "auto",
+        color: "common.white",
+        border: "1px solid rgba(255,255,255,0.18)",
+        backgroundColor: "rgba(5,7,8,0.66)",
+        backdropFilter: "blur(16px)",
+        p: 2,
+      }}
+    >
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <AutoAwesomeOutlinedIcon sx={{ color: "#8de7d0" }} />
+          <Box>
+            <Typography
+              sx={{
+                fontFamily: '"JetBrains Mono", monospace',
+                fontSize: 12,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              Galaxy leaderboard
+            </Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.58)", fontSize: 12 }}>
+              Ranked by planet energy spent
+            </Typography>
+          </Box>
+        </Stack>
+
+        <Stack spacing={1}>
+          {leaderboard.topUsers.map((entry) => (
+            <LeaderboardRow
+              key={entry.userId}
+              entry={entry}
+              highlight={currentUser?.userId === entry.userId}
+            />
+          ))}
+
+          {currentUser && !currentUserIsTopRanked && (
+            <>
+              <Divider sx={{ borderColor: "rgba(255,255,255,0.14)" }} />
+              <Typography
+                sx={{
+                  color: "rgba(255,255,255,0.55)",
+                  fontFamily: '"JetBrains Mono", monospace',
+                  fontSize: 12,
+                  letterSpacing: "0.12em",
+                  textAlign: "center",
+                }}
+              >
+                ...
+              </Typography>
+              <LeaderboardRow entry={currentUser} highlight />
+            </>
+          )}
+        </Stack>
+      </Stack>
+    </Box>
+  );
+}
+
+function LeaderboardRow({
+  entry,
+  highlight,
+}: {
+  entry: GalaxyLeaderboardEntry;
+  highlight?: boolean;
+}) {
+  return (
+    <Box
+      component={RouterLink}
+      to={`/users/${encodeURIComponent(entry.username)}`}
+      sx={{
+        display: "grid",
+        gridTemplateColumns: "34px 34px minmax(0, 1fr) auto",
+        gap: 1,
+        alignItems: "center",
+        border: "1px solid",
+        borderColor: highlight
+          ? "rgba(141,231,208,0.54)"
+          : "rgba(255,255,255,0.12)",
+        backgroundColor: highlight
+          ? "rgba(141,231,208,0.12)"
+          : "rgba(255,255,255,0.045)",
+        color: "common.white",
+        p: 1,
+        textDecoration: "none",
+        transition: "border-color 150ms ease, background-color 150ms ease",
+        "&:hover": {
+          borderColor: "rgba(141,231,208,0.72)",
+          backgroundColor: "rgba(141,231,208,0.16)",
+        },
+      }}
+    >
+      <Typography
+        sx={{
+          color: highlight ? "#8de7d0" : "rgba(255,255,255,0.62)",
+          fontFamily: '"JetBrains Mono", monospace',
+          fontSize: 12,
+        }}
+      >
+        #{entry.rank}
+      </Typography>
+
+      <Avatar
+        src={entry.avatarUrl ?? undefined}
+        sx={{
+          width: 34,
+          height: 34,
+          bgcolor: "rgba(141,231,208,0.12)",
+          color: "#8de7d0",
+          fontSize: 14,
+        }}
+      >
+        {entry.username.charAt(0).toUpperCase()}
+      </Avatar>
+
+      <Box sx={{ minWidth: 0 }}>
+        <Typography
+          noWrap
+          sx={{
+            color: "common.white",
+            fontSize: 14,
+            fontWeight: 700,
+            lineHeight: 1.2,
+          }}
+        >
+          {entry.username}
+          {highlight ? " · you" : ""}
+        </Typography>
+        <Typography sx={{ color: "rgba(255,255,255,0.58)", fontSize: 12 }}>
+          {entry.planetCount} {entry.planetCount === 1 ? "planet" : "planets"}
+        </Typography>
+      </Box>
+
+      <Stack spacing={0.15} sx={{ alignItems: "flex-end" }}>
+        <Typography
+          sx={{
+            color: "#8de7d0",
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: 14,
+            lineHeight: 1,
+          }}
+        >
+          {entry.totalEnergySpent.toLocaleString()}
+        </Typography>
+        <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>
+          energy
+        </Typography>
+      </Stack>
+    </Box>
+  );
+}
+
+function EmptyGalaxy({
+  isPublicGalaxy,
+  profilePath,
+}: {
+  isPublicGalaxy: boolean;
+  profilePath: string;
+}) {
   return (
     <Stack
       spacing={2}
@@ -659,15 +868,19 @@ function EmptyGalaxy() {
           color: "text.primary",
         }}
       >
-        You do not own any planets yet.
+        {isPublicGalaxy
+          ? "This writer does not own any planets yet."
+          : "You do not own any planets yet."}
       </Alert>
       <Button
         component={RouterLink}
-        startIcon={<StorefrontOutlinedIcon />}
-        to="/store"
+        startIcon={
+          isPublicGalaxy ? <ArrowBackOutlinedIcon /> : <StorefrontOutlinedIcon />
+        }
+        to={isPublicGalaxy ? profilePath : "/store"}
         variant="contained"
       >
-        Visit store
+        {isPublicGalaxy ? "Back to profile" : "Visit store"}
       </Button>
     </Stack>
   );
