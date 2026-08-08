@@ -1,4 +1,11 @@
-import { Component, Suspense, useEffect, useMemo, type ReactNode } from "react";
+import {
+  Component,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from "react";
 import {
   Alert,
   Box,
@@ -12,7 +19,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { useEnergyStore } from "../store/useEnergyStore";
@@ -303,6 +310,7 @@ function PlanetImageAvatar({ imageUrl }: { imageUrl: string }) {
 }
 
 function PlanetPreviewModel({ modelUrl }: { modelUrl: string }) {
+  const groupRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(modelUrl);
   const rotation = getPreviewRotation(modelUrl);
   const offset = getPreviewOffset(modelUrl);
@@ -325,8 +333,13 @@ function PlanetPreviewModel({ modelUrl }: { modelUrl: string }) {
     };
   }, [modelUrl, scene]);
 
+  useFrame((_, delta) => {
+    if (!groupRef.current) return;
+    groupRef.current.rotation.y += delta * 0.55;
+  });
+
   return (
-    <group position={offset} rotation={rotation}>
+    <group ref={groupRef} position={offset} rotation={rotation}>
       <primitive object={clone} scale={scale} />
     </group>
   );
